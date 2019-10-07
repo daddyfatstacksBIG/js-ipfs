@@ -1,6 +1,7 @@
 # Use IPFS to explore the Ethereum Blockchain
 
-> This is a pre-example to a full Ethereum to IPFS bridge. It shows how to resolve Ethereum hashes through the IPFS DAG get API.
+> This is a pre-example to a full Ethereum to IPFS bridge. It shows how to
+> resolve Ethereum hashes through the IPFS DAG get API.
 
 ## Set up
 
@@ -18,7 +19,8 @@ If this is the first time you use js-ipfs, make sure to init your repo with
 
 ## Load ethereum chain data into ipfs
 
-We've some ethereum blocks available at [eth-stuffs](./eth-stuffs) folder, you can add them to ipfs by running:
+We've some ethereum blocks available at [eth-stuffs](./eth-stuffs) folder, you
+can add them to ipfs by running:
 
 ```sh
 > ./load-eth-stuffs.sh
@@ -36,7 +38,8 @@ baglacgzalfkeokwk7nvwenmr2k3e3f6khvch2bw54nhr25vjmjy2lshmx5mas
 
 ## Explore these blocks using the DAG API
 
-NOTE: Currently your js-ipfs daemon must NOT be running for the following examples to work.
+NOTE: Currently your js-ipfs daemon must NOT be running for the following
+examples to work.
 
 Some examples
 
