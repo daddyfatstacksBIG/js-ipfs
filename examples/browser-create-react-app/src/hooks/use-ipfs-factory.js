@@ -1,7 +1,7 @@
-import Ipfs from 'ipfs'
-import { useEffect, useState } from 'react'
+import Ipfs from "ipfs";
+import { useEffect, useState } from "react";
 
-let ipfs = null
+let ipfs = null;
 
 /*
  * A quick demo using React hooks to create an ipfs instance.
@@ -13,44 +13,44 @@ let ipfs = null
  * so use-ipfs calls can grab it from there rather than expecting
  * it to be passed in.
  */
-export default function useIpfsFactory ({ commands }) {
-  const [isIpfsReady, setIpfsReady] = useState(Boolean(ipfs))
-  const [ipfsInitError, setIpfsInitError] = useState(null)
+export default function useIpfsFactory({ commands }) {
+  const [isIpfsReady, setIpfsReady] = useState(Boolean(ipfs));
+  const [ipfsInitError, setIpfsInitError] = useState(null);
 
   useEffect(() => {
     // The fn to useEffect should not return anything other than a cleanup fn,
     // So it cannot be marked async, which causes it to return a promise,
     // Hence we delegate to a async fn rather than making the param an async fn.
-    startIpfs()
-    return function cleanup () {
+    startIpfs();
+    return function cleanup() {
       if (ipfs && ipfs.stop) {
-        console.log('Stopping IPFS')
-        ipfs.stop()
-        setIpfsReady(false)
+        console.log("Stopping IPFS");
+        ipfs.stop();
+        setIpfsReady(false);
       }
-    }
-  })
+    };
+  });
 
-  async function startIpfs () {
+  async function startIpfs() {
     if (ipfs) {
-      console.log('IPFS already started')
+      console.log("IPFS already started");
     } else if (window.ipfs && window.ipfs.enable) {
-      console.log('Found window.ipfs')
-      ipfs = await window.ipfs.enable({ commands })
+      console.log("Found window.ipfs");
+      ipfs = await window.ipfs.enable({ commands });
     } else {
       try {
-        console.time('IPFS Started')
-        ipfs = await Ipfs.create()
-        console.timeEnd('IPFS Started')
+        console.time("IPFS Started");
+        ipfs = await Ipfs.create();
+        console.timeEnd("IPFS Started");
       } catch (error) {
-        console.error('IPFS init error:', error)
-        ipfs = null
-        setIpfsInitError(error)
+        console.error("IPFS init error:", error);
+        ipfs = null;
+        setIpfsInitError(error);
       }
     }
 
-    setIpfsReady(Boolean(ipfs))
+    setIpfsReady(Boolean(ipfs));
   }
 
-  return { ipfs, isIpfsReady, ipfsInitError }
+  return { ipfs, isIpfsReady, ipfsInitError };
 }

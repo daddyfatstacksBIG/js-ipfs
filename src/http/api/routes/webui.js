@@ -1,12 +1,12 @@
-'use strict'
+"use strict";
 
-const Joi = require('@hapi/joi')
-const resources = require('../../gateway/resources')
+const Joi = require("@hapi/joi");
+const resources = require("../../gateway/resources");
 
 module.exports = [
   {
-    method: '*',
-    path: '/ipfs/{path*}',
+    method: "*",
+    path: "/ipfs/{path*}",
     options: {
       handler: resources.gateway.handler,
       validate: {
@@ -23,10 +23,10 @@ module.exports = [
     }
   },
   {
-    method: '*',
-    path: '/webui',
-    handler (request, h) {
-      return h.redirect('/ipfs/QmPURAjo3oneGH53ovt68UZEBvsc8nNmEhQZEpsVEQUMZE')
+    method: "*",
+    path: "/webui",
+    handler(request, h) {
+      return h.redirect("/ipfs/QmPURAjo3oneGH53ovt68UZEBvsc8nNmEhQZEpsVEQUMZE");
     }
   }
-]
+];

@@ -1,34 +1,35 @@
 /* global self */
-'use strict'
+"use strict";
 
-const IPFSRepo = require('ipfs-repo')
-const hat = require('hat')
-const callbackify = require('callbackify')
+const IPFSRepo = require("ipfs-repo");
+const hat = require("hat");
+const callbackify = require("callbackify");
 
-const idb = self.indexedDB ||
+const idb =
+  self.indexedDB ||
   self.mozIndexedDB ||
   self.webkitIndexedDB ||
-  self.msIndexedDB
+  self.msIndexedDB;
 
-function createTempRepo (repoPath) {
-  repoPath = repoPath || '/ipfs-' + hat()
+function createTempRepo(repoPath) {
+  repoPath = repoPath || "/ipfs-" + hat();
 
-  const repo = new IPFSRepo(repoPath)
+  const repo = new IPFSRepo(repoPath);
 
   repo.teardown = callbackify(async () => {
     try {
-      await repo.close()
+      await repo.close();
     } catch (err) {
-      if (!err.message.includes('already closed')) {
-        throw err
+      if (!err.message.includes("already closed")) {
+        throw err;
       }
     }
 
-    idb.deleteDatabase(repoPath)
-    idb.deleteDatabase(repoPath + '/blocks')
-  })
+    idb.deleteDatabase(repoPath);
+    idb.deleteDatabase(repoPath + "/blocks");
+  });
 
-  return repo
+  return repo;
 }
 
-module.exports = createTempRepo
+module.exports = createTempRepo;

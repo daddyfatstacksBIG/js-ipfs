@@ -1,16 +1,16 @@
 /* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-env mocha */
-'use strict'
+"use strict";
 
-const { expect } = require('interface-ipfs-core/src/utils/mocha')
-const path = require('path')
-const parallel = require('async/parallel')
+const { expect } = require("interface-ipfs-core/src/utils/mocha");
+const path = require("path");
+const parallel = require("async/parallel");
 
-const IPFSFactory = require('ipfsd-ctl')
+const IPFSFactory = require("ipfsd-ctl");
 const f = IPFSFactory.create({
-  type: 'js',
-  IpfsClient: require('ipfs-http-client')
-})
+  type: "js",
+  IpfsClient: require("ipfs-http-client")
+});
 
 const config = {
   Bootstrap: [],
@@ -22,87 +22,89 @@ const config = {
       Enabled: false
     }
   }
-}
+};
 
-const createNode = () => f.spawn({
-  exec: path.resolve(`${__dirname}/../../src/cli/bin.js`),
-  config,
-  initOptions: { bits: 512 },
-  args: ['--preload-enabled=false']
-})
+const createNode = () =>
+  f.spawn({
+    exec: path.resolve(`${__dirname}/../../src/cli/bin.js`),
+    config,
+    initOptions: { bits: 512 },
+    args: ["--preload-enabled=false"]
+  });
 
-describe.skip('kad-dht is routing content and peers correctly', () => {
-  let nodeA
-  let nodeB
-  let nodeC
-  let addrB
-  let addrC
+describe.skip("kad-dht is routing content and peers correctly", () => {
+  let nodeA;
+  let nodeB;
+  let nodeC;
+  let addrB;
+  let addrC;
 
-  let nodes
-  before(function (done) {
-    this.timeout(30 * 1000)
+  let nodes;
+  before(function(done) {
+    this.timeout(30 * 1000);
 
-    parallel([
-      (cb) => createNode(cb),
-      (cb) => createNode(cb),
-      (cb) => createNode(cb)
-    ], (err, _nodes) => {
-      expect(err).to.not.exist()
-      nodes = _nodes
-      nodeA = _nodes[0].api
-      nodeB = _nodes[1].api
-      nodeC = _nodes[2].api
-      parallel([
-        (cb) => nodeA.id(cb),
-        (cb) => nodeB.id(cb),
-        (cb) => nodeC.id(cb)
-      ], (err, ids) => {
-        expect(err).to.not.exist()
-        addrB = ids[1].addresses[0]
-        addrC = ids[2].addresses[0]
-        parallel([
-          (cb) => nodeA.swarm.connect(addrB, cb),
-          (cb) => nodeB.swarm.connect(addrC, cb)
-        ], done)
-      })
-    })
-  })
+    parallel(
+      [cb => createNode(cb), cb => createNode(cb), cb => createNode(cb)],
+      (err, _nodes) => {
+        expect(err).to.not.exist();
+        nodes = _nodes;
+        nodeA = _nodes[0].api;
+        nodeB = _nodes[1].api;
+        nodeC = _nodes[2].api;
+        parallel(
+          [cb => nodeA.id(cb), cb => nodeB.id(cb), cb => nodeC.id(cb)],
+          (err, ids) => {
+            expect(err).to.not.exist();
+            addrB = ids[1].addresses[0];
+            addrC = ids[2].addresses[0];
+            parallel(
+              [
+                cb => nodeA.swarm.connect(addrB, cb),
+                cb => nodeB.swarm.connect(addrC, cb)
+              ],
+              done
+            );
+          }
+        );
+      }
+    );
+  });
 
-  after((done) => parallel(nodes.map((node) => (cb) => node.stop(cb)), done))
+  after(done => parallel(nodes.map(node => cb => node.stop(cb)), done));
 
-  it('add a file in B, fetch in A', function (done) {
-    this.timeout(30 * 1000)
+  it("add a file in B, fetch in A", function(done) {
+    this.timeout(30 * 1000);
     const file = {
-      path: 'testfile1.txt',
-      content: Buffer.from('hello kad 1')
-    }
+      path: "testfile1.txt",
+      content: Buffer.from("hello kad 1")
+    };
 
     nodeB.add(file, (err, filesAdded) => {
-      expect(err).to.not.exist()
+      expect(err).to.not.exist();
 
       nodeA.cat(filesAdded[0].hash, (err, data) => {
-        expect(err).to.not.exist()
-        expect(data).to.eql(file.content)
-        done()
-      })
-    })
-  })
+        expect(err).to.not.exist();
+        expect(data).to.eql(file.content);
+        done();
+      });
+    });
+  });
 
-  it('add a file in C, fetch through B in A', function (done) {
-    this.timeout(30 * 1000)
+  it("add a file in C, fetch through B in A", function(done) {
+    this.timeout(30 * 1000);
     const file = {
-      path: 'testfile2.txt',
-      content: Buffer.from('hello kad 2')
-    }
+      path: "testfile2.txt",
+      content: Buffer.from("hello kad 2")
+    };
 
     nodeC.add(file, (err, filesAdded) => {
-      expect(err).to.not.exist()
+      expect(err).to.not.exist();
 
       nodeA.cat(filesAdded[0].hash, (err, data) => {
-        expect(err).to.not.exist()
-        expect(data).to.eql(file.content)
-        done()
-      })
-    })
-  })
-})
+        expect(err).to.not.exist();
+        expect(data).to.eql(file.content);
+        done();
+      });
+    });
+  });
+});

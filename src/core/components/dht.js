@@ -1,16 +1,16 @@
-'use strict'
+"use strict";
 
-const callbackify = require('callbackify')
-const PeerId = require('peer-id')
-const PeerInfo = require('peer-info')
-const CID = require('cids')
-const { every, forEach } = require('p-iteration')
-const errcode = require('err-code')
-const debug = require('debug')
-const log = debug('ipfs:dht')
-log.error = debug('ipfs:dht:error')
+const callbackify = require("callbackify");
+const PeerId = require("peer-id");
+const PeerInfo = require("peer-info");
+const CID = require("cids");
+const { every, forEach } = require("p-iteration");
+const errcode = require("err-code");
+const debug = require("debug");
+const log = debug("ipfs:dht");
+log.error = debug("ipfs:dht:error");
 
-module.exports = (self) => {
+module.exports = self => {
   return {
     /**
      * Given a key, query the DHT for its best value.
@@ -21,20 +21,21 @@ module.exports = (self) => {
      * @param {function(Error)} [callback]
      * @returns {Promise|void}
      */
-    get: callbackify.variadic(async (key, options) => { // eslint-disable-line require-await
-      options = options || {}
+    get: callbackify.variadic(async (key, options) => {
+      // eslint-disable-line require-await
+      options = options || {};
 
       if (!Buffer.isBuffer(key)) {
         try {
-          key = (new CID(key)).buffer
+          key = new CID(key).buffer;
         } catch (err) {
-          log.error(err)
+          log.error(err);
 
-          throw errcode(err, 'ERR_INVALID_CID')
+          throw errcode(err, "ERR_INVALID_CID");
         }
       }
 
-      return self.libp2p.dht.get(key, options)
+      return self.libp2p.dht.get(key, options);
     }),
 
     /**
@@ -49,18 +50,19 @@ module.exports = (self) => {
      * @param {function(Error)} [callback]
      * @returns {Promise|void}
      */
-    put: callbackify(async (key, value) => { // eslint-disable-line require-await
+    put: callbackify(async (key, value) => {
+      // eslint-disable-line require-await
       if (!Buffer.isBuffer(key)) {
         try {
-          key = (new CID(key)).buffer
+          key = new CID(key).buffer;
         } catch (err) {
-          log.error(err)
+          log.error(err);
 
-          throw errcode(err, 'ERR_INVALID_CID')
+          throw errcode(err, "ERR_INVALID_CID");
         }
       }
 
-      return self.libp2p.dht.put(key, value)
+      return self.libp2p.dht.put(key, value);
     }),
 
     /**
@@ -73,20 +75,21 @@ module.exports = (self) => {
      * @param {function(Error, Array<PeerInfo>)} [callback]
      * @returns {Promise<PeerInfo>|void}
      */
-    findProvs: callbackify.variadic(async (key, options) => { // eslint-disable-line require-await
-      options = options || {}
+    findProvs: callbackify.variadic(async (key, options) => {
+      // eslint-disable-line require-await
+      options = options || {};
 
-      if (typeof key === 'string') {
+      if (typeof key === "string") {
         try {
-          key = new CID(key)
+          key = new CID(key);
         } catch (err) {
-          log.error(err)
+          log.error(err);
 
-          throw errcode(err, 'ERR_INVALID_CID')
+          throw errcode(err, "ERR_INVALID_CID");
         }
       }
 
-      return self.libp2p.contentRouting.findProviders(key, options)
+      return self.libp2p.contentRouting.findProviders(key, options);
     }),
 
     /**
@@ -96,12 +99,13 @@ module.exports = (self) => {
      * @param {function(Error, PeerInfo)} [callback]
      * @returns {Promise<PeerInfo>|void}
      */
-    findPeer: callbackify(async (peer) => { // eslint-disable-line require-await
-      if (typeof peer === 'string') {
-        peer = PeerId.createFromB58String(peer)
+    findPeer: callbackify(async peer => {
+      // eslint-disable-line require-await
+      if (typeof peer === "string") {
+        peer = PeerId.createFromB58String(peer);
       }
 
-      return self.libp2p.peerRouting.findPeer(peer)
+      return self.libp2p.peerRouting.findPeer(peer);
     }),
 
     /**
@@ -114,29 +118,29 @@ module.exports = (self) => {
      * @returns {Promise|void}
      */
     provide: callbackify.variadic(async (keys, options) => {
-      options = options || {}
+      options = options || {};
 
       if (!Array.isArray(keys)) {
-        keys = [keys]
+        keys = [keys];
       }
 
       // ensure blocks are actually local
-      const has = await every(keys, (key) => {
-        return self._repo.blocks.has(key)
-      })
+      const has = await every(keys, key => {
+        return self._repo.blocks.has(key);
+      });
 
       if (!has) {
-        const errMsg = 'block(s) not found locally, cannot provide'
+        const errMsg = "block(s) not found locally, cannot provide";
 
-        log.error(errMsg)
-        throw errcode(errMsg, 'ERR_BLOCK_NOT_FOUND')
+        log.error(errMsg);
+        throw errcode(errMsg, "ERR_BLOCK_NOT_FOUND");
       }
 
       if (options.recursive) {
         // TODO: Implement recursive providing
-        throw errcode('not implemented yet', 'ERR_NOT_IMPLEMENTED_YET')
+        throw errcode("not implemented yet", "ERR_NOT_IMPLEMENTED_YET");
       } else {
-        await forEach(keys, (cid) => self.libp2p.contentRouting.provide(cid))
+        await forEach(keys, cid => self.libp2p.contentRouting.provide(cid));
       }
     }),
 
@@ -147,27 +151,29 @@ module.exports = (self) => {
      * @param {function(Error, Array<PeerInfo>)} [callback]
      * @returns {Promise<Array<PeerInfo>>|void}
      */
-    query: callbackify(async (peerId) => {
-      if (typeof peerId === 'string') {
+    query: callbackify(async peerId => {
+      if (typeof peerId === "string") {
         try {
-          peerId = PeerId.createFromB58String(peerId)
+          peerId = PeerId.createFromB58String(peerId);
         } catch (err) {
-          log.error(err)
+          log.error(err);
 
-          throw err
+          throw err;
         }
       }
 
       try {
         // TODO expose this method in peerRouting
-        const peerIds = await self.libp2p._dht.getClosestPeers(peerId.toBytes())
+        const peerIds = await self.libp2p._dht.getClosestPeers(
+          peerId.toBytes()
+        );
 
-        return peerIds.map((id) => new PeerInfo(id))
+        return peerIds.map(id => new PeerInfo(id));
       } catch (err) {
-        log.error(err)
+        log.error(err);
 
-        throw err
+        throw err;
       }
     })
-  }
-}
+  };
+};

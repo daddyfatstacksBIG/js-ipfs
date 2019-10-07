@@ -1,35 +1,37 @@
-import 'babel-polyfill'
-import IPFS from 'ipfs'
+import "babel-polyfill";
+import IPFS from "ipfs";
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // IPFS node setup
-  const node = await IPFS.create({ repo: String(Math.random() + Date.now()) })
+  const node = await IPFS.create({ repo: String(Math.random() + Date.now()) });
 
   // UI elements
-  const status = document.getElementById('status')
-  const output = document.getElementById('output')
+  const status = document.getElementById("status");
+  const output = document.getElementById("output");
 
-  output.textContent = ''
+  output.textContent = "";
 
-  function log (txt) {
-    console.info(txt)
-    output.textContent += `${txt.trim()}\n`
+  function log(txt) {
+    console.info(txt);
+    output.textContent += `${txt.trim()}\n`;
   }
 
-  status.innerText = 'Connected to IPFS :)'
+  status.innerText = "Connected to IPFS :)";
 
-  const version = await node.version()
+  const version = await node.version();
 
-  log(`The IPFS node version is ${version.version}`)
+  log(`The IPFS node version is ${version.version}`);
 
   const filesAdded = await node.add({
-    path: 'hello-parcel.txt',
-    content: 'Hello from parcel.js bundled ipfs example'
-  })
+    path: "hello-parcel.txt",
+    content: "Hello from parcel.js bundled ipfs example"
+  });
 
-  log(`This page deployed ${filesAdded[0].path} to IPFS and its hash is ${filesAdded[0].hash}`)
+  log(
+    `This page deployed ${filesAdded[0].path} to IPFS and its hash is ${filesAdded[0].hash}`
+  );
 
-  const fileBuffer = await node.cat(filesAdded[0].hash)
+  const fileBuffer = await node.cat(filesAdded[0].hash);
 
-  log(`The contents of the file was: ${fileBuffer.toString()}`)
-})
+  log(`The contents of the file was: ${fileBuffer.toString()}`);
+});

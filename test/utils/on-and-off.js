@@ -1,107 +1,107 @@
 /* eslint-env mocha */
-'use strict'
+"use strict";
 
-const hat = require('hat')
+const hat = require("hat");
 
-const ipfsExec = require('../utils/ipfs-exec')
-const clean = require('../utils/clean')
-const os = require('os')
+const ipfsExec = require("../utils/ipfs-exec");
+const clean = require("../utils/clean");
+const os = require("os");
 
-const DaemonFactory = require('ipfsd-ctl')
+const DaemonFactory = require("ipfsd-ctl");
 const df = DaemonFactory.create({
-  IpfsClient: require('ipfs-http-client')
-})
-const path = require('path')
-const origLocale = process.env.LC_ALL
+  IpfsClient: require("ipfs-http-client")
+});
+const path = require("path");
+const origLocale = process.env.LC_ALL;
 
-function off (tests) {
-  describe('daemon off (directly to core)', function () {
-    this.timeout(60 * 1000)
+function off(tests) {
+  describe("daemon off (directly to core)", function() {
+    this.timeout(60 * 1000);
     const thing = {
       off: true
-    }
-    let repoPath
+    };
+    let repoPath;
 
-    before(function () {
-      setLocaleToEnglish()
-      this.timeout(60 * 1000)
+    before(function() {
+      setLocaleToEnglish();
+      this.timeout(60 * 1000);
 
-      repoPath = os.tmpdir() + '/ipfs-' + hat()
-      thing.ipfs = ipfsExec(repoPath)
-      thing.ipfs.repoPath = repoPath
+      repoPath = os.tmpdir() + "/ipfs-" + hat();
+      thing.ipfs = ipfsExec(repoPath);
+      thing.ipfs.repoPath = repoPath;
 
-      return thing.ipfs('init')
-    })
+      return thing.ipfs("init");
+    });
 
-    after(async function () {
-      resetLocaleToSystem()
-      this.timeout(20 * 1000)
-      await clean(repoPath)
-    })
+    after(async function() {
+      resetLocaleToSystem();
+      this.timeout(20 * 1000);
+      await clean(repoPath);
+    });
 
-    tests(thing)
-  })
+    tests(thing);
+  });
 }
 
-function on (tests) {
-  describe('daemon on (through http-api)', function () {
-    this.timeout(60 * 1000)
+function on(tests) {
+  describe("daemon on (through http-api)", function() {
+    this.timeout(60 * 1000);
     const thing = {
       on: true
-    }
+    };
 
-    let ipfsd
-    before(async function () {
-      setLocaleToEnglish()
+    let ipfsd;
+    before(async function() {
+      setLocaleToEnglish();
 
       // CI takes longer to instantiate the daemon,
       // so we need to increase the timeout for the
       // before step
-      this.timeout(60 * 1000)
+      this.timeout(60 * 1000);
 
       ipfsd = await df.spawn({
-        type: 'js',
+        type: "js",
         exec: path.resolve(`${__dirname}/../../src/cli/bin.js`),
         initOptions: { bits: 512 },
         config: { Bootstrap: [] }
-      })
-      thing.ipfs = ipfsExec(ipfsd.repoPath)
-      thing.ipfs.repoPath = ipfsd.repoPath
-    })
+      });
+      thing.ipfs = ipfsExec(ipfsd.repoPath);
+      thing.ipfs.repoPath = ipfsd.repoPath;
+    });
 
-    after(function () {
-      resetLocaleToSystem()
+    after(function() {
+      resetLocaleToSystem();
       if (ipfsd) {
-        this.timeout(15 * 1000)
-        return ipfsd.stop()
+        this.timeout(15 * 1000);
+        return ipfsd.stop();
       }
-    })
+    });
 
-    tests(thing)
-  })
+    tests(thing);
+  });
 }
 
-function setLocaleToEnglish () {
+function setLocaleToEnglish() {
   Object.assign(process.env, {
-    LANG: 'en_US.UTF-8',
-    LANGUAGE: 'en_US.UTF-8',
-    LC_CTYPE: 'en_US.UTF-8',
-    LC_NUMERIC: 'en_US.UTF-8',
-    LC_TIME: 'en_US.UTF-8',
-    LC_COLLATE: 'en_US.UTF-8',
-    LC_MONETARY: 'en_US.UTF-8',
-    LC_MESSAGES: 'en_US.UTF-8',
-    LC_PAPER: 'en_US.UTF-8',
-    LC_NAME: 'en_US.UTF-8',
-    LC_ADDRESS: 'en_US.UTF-8',
-    LC_TELEPHONE: 'en_US.UTF-8',
-    LC_MEASUREMENT: 'en_US.UTF-8',
-    LC_IDENTIFICATION: 'en_US.UTF-8',
-    LC_ALL: 'en_US.UTF-8'
-  })
+    LANG: "en_US.UTF-8",
+    LANGUAGE: "en_US.UTF-8",
+    LC_CTYPE: "en_US.UTF-8",
+    LC_NUMERIC: "en_US.UTF-8",
+    LC_TIME: "en_US.UTF-8",
+    LC_COLLATE: "en_US.UTF-8",
+    LC_MONETARY: "en_US.UTF-8",
+    LC_MESSAGES: "en_US.UTF-8",
+    LC_PAPER: "en_US.UTF-8",
+    LC_NAME: "en_US.UTF-8",
+    LC_ADDRESS: "en_US.UTF-8",
+    LC_TELEPHONE: "en_US.UTF-8",
+    LC_MEASUREMENT: "en_US.UTF-8",
+    LC_IDENTIFICATION: "en_US.UTF-8",
+    LC_ALL: "en_US.UTF-8"
+  });
 }
 
-function resetLocaleToSystem () {
+function resetLocaleToSystem() {
   Object.assign(process.env, {
     LANG: origLocale,
     LANGUAGE: origLocale,
@@ -118,16 +118,16 @@ function resetLocaleToSystem () {
     LC_MEASUREMENT: origLocale,
     LC_IDENTIFICATION: origLocale,
     LC_ALL: origLocale
-  })
+  });
 }
 
 /*
  * CLI Utility to run the tests offline (daemon off) and online (daemon on)
  */
-exports = module.exports = (tests) => {
-  off(tests)
-  on(tests)
-}
+exports = module.exports = tests => {
+  off(tests);
+  on(tests);
+};
 
-exports.off = off
-exports.on = on
+exports.off = off;
+exports.on = on;

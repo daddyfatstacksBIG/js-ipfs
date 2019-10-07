@@ -1,49 +1,58 @@
-'use strict'
+"use strict";
 
-const React = require('react')
-const IPFS = require('ipfs')
+const React = require("react");
+const IPFS = require("ipfs");
 
-const stringToUse = 'hello world from webpacked IPFS'
+const stringToUse = "hello world from webpacked IPFS";
 
 class App extends React.Component {
-  constructor (props) {
-    super(props)
+  constructor(props) {
+    super(props);
     this.state = {
       id: null,
       agentVersion: null,
       protocolVersion: null,
       addedFileHash: null,
       addedFileContents: null
-    }
+    };
   }
 
-  componentDidMount () {
-    this.ops()
+  componentDidMount() {
+    this.ops();
   }
 
-  async ops () {
-    const node = await IPFS.create({ repo: String(Math.random() + Date.now()) })
+  async ops() {
+    const node = await IPFS.create({
+      repo: String(Math.random() + Date.now())
+    });
 
-    console.log('IPFS node is ready')
+    console.log("IPFS node is ready");
 
-    const { id, agentVersion, protocolVersion } = await node.id()
+    const { id, agentVersion, protocolVersion } = await node.id();
 
-    this.setState({ id, agentVersion, protocolVersion })
+    this.setState({ id, agentVersion, protocolVersion });
 
-    const [{ hash }] = await node.add(stringToUse)
-    this.setState({ addedFileHash: hash })
+    const [{ hash }] = await node.add(stringToUse);
+    this.setState({ addedFileHash: hash });
 
-    const data = await node.cat(hash)
-    this.setState({ addedFileContents: data.toString() })
+    const data = await node.cat(hash);
+    this.setState({ addedFileContents: data.toString() });
   }
 
-  render () {
+  render() {
     return (
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ textAlign: "center" }}>
         <h1>Everything is working!</h1>
-        <p>Your ID is <strong>{this.state.id}</strong></p>
-        <p>Your IPFS version is <strong>{this.state.agentVersion}</strong></p>
-        <p>Your IPFS protocol version is <strong>{this.state.protocolVersion}</strong></p>
+        <p>
+          Your ID is <strong>{this.state.id}</strong>
+        </p>
+        <p>
+          Your IPFS version is <strong>{this.state.agentVersion}</strong>
+        </p>
+        <p>
+          Your IPFS protocol version is{" "}
+          <strong>{this.state.protocolVersion}</strong>
+        </p>
         <hr />
         <div>
           Added a file! <br />
@@ -56,7 +65,7 @@ class App extends React.Component {
           {this.state.addedFileContents}
         </p>
       </div>
-    )
+    );
   }
 }
-module.exports = App
+module.exports = App;

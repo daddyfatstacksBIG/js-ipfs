@@ -1,38 +1,38 @@
 /* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-env mocha */
-'use strict'
+"use strict";
 
-const { expect } = require('interface-ipfs-core/src/utils/mocha')
-const MemoryStore = require('interface-datastore').MemoryDatastore
-const PeerInfo = require('peer-info')
-const PeerBook = require('peer-book')
-const WebSocketStar = require('libp2p-websocket-star')
-const Multiplex = require('pull-mplex')
-const SECIO = require('libp2p-secio')
-const KadDHT = require('libp2p-kad-dht')
-const Libp2p = require('libp2p')
-const isNode = require('detect-node')
+const { expect } = require("interface-ipfs-core/src/utils/mocha");
+const MemoryStore = require("interface-datastore").MemoryDatastore;
+const PeerInfo = require("peer-info");
+const PeerBook = require("peer-book");
+const WebSocketStar = require("libp2p-websocket-star");
+const Multiplex = require("pull-mplex");
+const SECIO = require("libp2p-secio");
+const KadDHT = require("libp2p-kad-dht");
+const Libp2p = require("libp2p");
+const isNode = require("detect-node");
 
-const libp2pComponent = require('../../src/core/components/libp2p')
+const libp2pComponent = require("../../src/core/components/libp2p");
 
-describe('libp2p customization', function () {
+describe("libp2p customization", function() {
   // Provide some extra time for ci since we're starting libp2p nodes in each test
-  this.timeout(25 * 1000)
+  this.timeout(25 * 1000);
 
-  let datastore
-  let peerInfo
-  let peerBook
-  let testConfig
-  let _libp2p
+  let datastore;
+  let peerInfo;
+  let peerBook;
+  let testConfig;
+  let _libp2p;
 
-  before(function (done) {
-    this.timeout(25 * 1000)
+  before(function(done) {
+    this.timeout(25 * 1000);
 
     testConfig = {
       Addresses: {
-        Swarm: ['/ip4/0.0.0.0/tcp/4002'],
-        API: '/ip4/127.0.0.1/tcp/5002',
-        Gateway: '/ip4/127.0.0.1/tcp/9090'
+        Swarm: ["/ip4/0.0.0.0/tcp/4002"],
+        API: "/ip4/127.0.0.1/tcp/5002",
+        Gateway: "/ip4/127.0.0.1/tcp/9090"
       },
       Discovery: {
         MDNS: {
@@ -42,26 +42,26 @@ describe('libp2p customization', function () {
           Enabled: false
         }
       }
-    }
-    datastore = new MemoryStore()
-    peerBook = new PeerBook()
+    };
+    datastore = new MemoryStore();
+    peerBook = new PeerBook();
     PeerInfo.create((err, pi) => {
-      peerInfo = pi
-      done(err)
-    })
-  })
+      peerInfo = pi;
+      done(err);
+    });
+  });
 
-  afterEach((done) => {
-    if (!_libp2p) return done()
+  afterEach(done => {
+    if (!_libp2p) return done();
 
     _libp2p.stop(() => {
-      _libp2p = null
-      done()
-    })
-  })
+      _libp2p = null;
+      done();
+    });
+  });
 
-  describe('bundle', () => {
-    it('should allow for using a libp2p bundle', (done) => {
+  describe("bundle", () => {
+    it("should allow for using a libp2p bundle", done => {
       const ipfs = {
         _repo: {
           datastore
@@ -71,47 +71,39 @@ describe('libp2p customization', function () {
         // eslint-disable-next-line no-console
         _print: console.log,
         _options: {
-          libp2p: (opts) => {
-            const wsstar = new WebSocketStar({ id: opts.peerInfo.id })
+          libp2p: opts => {
+            const wsstar = new WebSocketStar({ id: opts.peerInfo.id });
 
             return new Libp2p({
               peerInfo: opts.peerInfo,
               peerBook: opts.peerBook,
               modules: {
-                transport: [
-                  wsstar
-                ],
-                streamMuxer: [
-                  Multiplex
-                ],
-                connEncryption: [
-                  SECIO
-                ],
-                peerDiscovery: [
-                  wsstar.discovery
-                ],
+                transport: [wsstar],
+                streamMuxer: [Multiplex],
+                connEncryption: [SECIO],
+                peerDiscovery: [wsstar.discovery],
                 dht: KadDHT
               }
-            })
+            });
           }
         }
-      }
+      };
 
-      _libp2p = libp2pComponent(ipfs, testConfig)
+      _libp2p = libp2pComponent(ipfs, testConfig);
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
         expect(_libp2p._config.peerDiscovery).to.eql({
           autoDial: true
-        })
-        expect(_libp2p._transport).to.have.length(1)
-        done()
-      })
-    })
-  })
+        });
+        expect(_libp2p._transport).to.have.length(1);
+        done();
+      });
+    });
+  });
 
-  describe('options', () => {
-    it('should use options by default', (done) => {
+  describe("options", () => {
+    it("should use options by default", done => {
       const ipfs = {
         _repo: {
           datastore
@@ -120,12 +112,12 @@ describe('libp2p customization', function () {
         _peerBook: peerBook,
         // eslint-disable-next-line no-console
         _print: console.log
-      }
+      };
 
-      _libp2p = libp2pComponent(ipfs, testConfig)
+      _libp2p = libp2pComponent(ipfs, testConfig);
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
         expect(_libp2p._config).to.deep.include({
           peerDiscovery: {
             autoDial: true,
@@ -149,14 +141,14 @@ describe('libp2p customization', function () {
             signMessages: true,
             strictSigning: true
           }
-        })
-        expect(_libp2p._transport).to.have.length(3)
-        done()
-      })
-    })
+        });
+        expect(_libp2p._transport).to.have.length(3);
+        done();
+      });
+    });
 
-    it('should allow for overriding via options', (done) => {
-      const wsstar = new WebSocketStar({ id: peerInfo.id })
+    it("should allow for overriding via options", done => {
+      const wsstar = new WebSocketStar({ id: peerInfo.id });
 
       const ipfs = {
         _repo: {
@@ -179,21 +171,17 @@ describe('libp2p customization', function () {
           },
           libp2p: {
             modules: {
-              transport: [
-                wsstar
-              ],
-              peerDiscovery: [
-                wsstar.discovery
-              ]
+              transport: [wsstar],
+              peerDiscovery: [wsstar.discovery]
             }
           }
         }
-      }
+      };
 
-      _libp2p = libp2pComponent(ipfs, testConfig)
+      _libp2p = libp2pComponent(ipfs, testConfig);
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
         expect(_libp2p._config).to.deep.include({
           peerDiscovery: {
             autoDial: true,
@@ -211,13 +199,13 @@ describe('libp2p customization', function () {
               enabled: true
             }
           }
-        })
-        expect(_libp2p._transport).to.have.length(1)
-        done()
-      })
-    })
+        });
+        expect(_libp2p._transport).to.have.length(1);
+        done();
+      });
+    });
 
-    it('should NOT create delegate routers if they are not defined', (done) => {
+    it("should NOT create delegate routers if they are not defined", done => {
       const ipfs = {
         _repo: {
           datastore
@@ -233,20 +221,20 @@ describe('libp2p customization', function () {
             }
           }
         }
-      }
+      };
 
-      _libp2p = libp2pComponent(ipfs, testConfig)
+      _libp2p = libp2pComponent(ipfs, testConfig);
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
 
-        expect(_libp2p._modules.contentRouting).to.not.exist()
-        expect(_libp2p._modules.peerRouting).to.not.exist()
-        done()
-      })
-    })
+        expect(_libp2p._modules.contentRouting).to.not.exist();
+        expect(_libp2p._modules.peerRouting).to.not.exist();
+        done();
+      });
+    });
 
-    it('should create delegate routers if they are defined', (done) => {
+    it("should create delegate routers if they are defined", done => {
       const ipfs = {
         _repo: {
           datastore
@@ -258,38 +246,36 @@ describe('libp2p customization', function () {
         _options: {
           config: {
             Addresses: {
-              Delegates: [
-                '/dns4/node0.preload.ipfs.io/tcp/443/https'
-              ]
+              Delegates: ["/dns4/node0.preload.ipfs.io/tcp/443/https"]
             }
           }
         }
-      }
+      };
 
-      _libp2p = libp2pComponent(ipfs, testConfig)
+      _libp2p = libp2pComponent(ipfs, testConfig);
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
 
-        expect(_libp2p._modules.contentRouting).to.have.length(1)
+        expect(_libp2p._modules.contentRouting).to.have.length(1);
         expect(_libp2p._modules.contentRouting[0].api).to.include({
-          host: 'node0.preload.ipfs.io',
-          port: '443',
-          protocol: 'https'
-        })
-        expect(_libp2p._modules.peerRouting).to.have.length(1)
+          host: "node0.preload.ipfs.io",
+          port: "443",
+          protocol: "https"
+        });
+        expect(_libp2p._modules.peerRouting).to.have.length(1);
         expect(_libp2p._modules.peerRouting[0].api).to.include({
-          host: 'node0.preload.ipfs.io',
-          port: '443',
-          protocol: 'https'
-        })
-        done()
-      })
-    })
-  })
+          host: "node0.preload.ipfs.io",
+          port: "443",
+          protocol: "https"
+        });
+        done();
+      });
+    });
+  });
 
-  describe('bundle via custom config for pubsub', () => {
-    it('select gossipsub as pubsub router', (done) => {
+  describe("bundle via custom config for pubsub", () => {
+    it("select gossipsub as pubsub router", done => {
       const ipfs = {
         _repo: {
           datastore
@@ -299,24 +285,24 @@ describe('libp2p customization', function () {
         // eslint-disable-next-line no-console
         _print: console.log,
         _options: {}
-      }
+      };
       const customConfig = {
         ...testConfig,
         Pubsub: {
-          Router: 'gossipsub'
+          Router: "gossipsub"
         }
-      }
+      };
 
-      _libp2p = libp2pComponent(ipfs, customConfig)
+      _libp2p = libp2pComponent(ipfs, customConfig);
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
-        expect(_libp2p._modules.pubsub).to.eql(require('libp2p-gossipsub'))
-        done()
-      })
-    })
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
+        expect(_libp2p._modules.pubsub).to.eql(require("libp2p-gossipsub"));
+        done();
+      });
+    });
 
-    it('select floodsub as pubsub router if node', (done) => {
+    it("select floodsub as pubsub router if node", done => {
       const ipfs = {
         _repo: {
           datastore
@@ -326,29 +312,29 @@ describe('libp2p customization', function () {
         // eslint-disable-next-line no-console
         _print: console.log,
         _options: {}
-      }
+      };
       const customConfig = {
         ...testConfig,
         Pubsub: {
-          Router: 'floodsub'
+          Router: "floodsub"
         }
-      }
+      };
 
       try {
-        _libp2p = libp2pComponent(ipfs, customConfig)
+        _libp2p = libp2pComponent(ipfs, customConfig);
       } catch (err) {
         if (!isNode) {
-          expect(err).to.exist()
-          expect(err.code).to.eql('ERR_NOT_SUPPORTED')
-          done()
+          expect(err).to.exist();
+          expect(err.code).to.eql("ERR_NOT_SUPPORTED");
+          done();
         }
       }
 
-      _libp2p.start((err) => {
-        expect(err).to.not.exist()
-        expect(_libp2p._modules.pubsub).to.eql(require('libp2p-floodsub'))
-        done()
-      })
-    })
-  })
-})
+      _libp2p.start(err => {
+        expect(err).to.not.exist();
+        expect(_libp2p._modules.pubsub).to.eql(require("libp2p-floodsub"));
+        done();
+      });
+    });
+  });
+});

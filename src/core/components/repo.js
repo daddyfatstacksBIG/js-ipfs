@@ -1,9 +1,9 @@
-'use strict'
+"use strict";
 
-const repoVersion = require('ipfs-repo').repoVersion
-const callbackify = require('callbackify')
+const repoVersion = require("ipfs-repo").repoVersion;
+const callbackify = require("callbackify");
 
-module.exports = function repo (self) {
+module.exports = function repo(self) {
   return {
     init: callbackify(async (bits, empty) => {
       // 1. check if repo already exists
@@ -18,32 +18,32 @@ module.exports = function repo (self) {
      */
     version: callbackify(async () => {
       try {
-        await self._repo._checkInitialized()
+        await self._repo._checkInitialized();
       } catch (err) {
         // TODO: (dryajov) This is really hacky, there must be a better way
         const match = [
           /Key not found in database \[\/version\]/,
           /ENOENT/,
           /repo is not initialized yet/
-        ].some((m) => {
-          return m.test(err.message)
-        })
+        ].some(m => {
+          return m.test(err.message);
+        });
         if (match) {
           // this repo has not been initialized
-          return repoVersion
+          return repoVersion;
         }
-        throw err
+        throw err;
       }
 
-      return self._repo.version.get()
+      return self._repo.version.get();
     }),
 
-    gc: require('./pin/gc')(self),
+    gc: require("./pin/gc")(self),
 
-    stat: callbackify.variadic(async (options) => {
-      options = options || {}
+    stat: callbackify.variadic(async options => {
+      options = options || {};
 
-      const stats = await self._repo.stat(options)
+      const stats = await self._repo.stat(options);
 
       return {
         numObjects: stats.numObjects,
@@ -51,9 +51,9 @@ module.exports = function repo (self) {
         repoPath: stats.repoPath,
         version: stats.version.toString(),
         storageMax: stats.storageMax
-      }
+      };
     }),
 
     path: () => self._repo.path
-  }
-}
+  };
+};

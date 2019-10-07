@@ -1,19 +1,19 @@
-'use strict'
+"use strict";
 
-const { Key } = require('interface-datastore')
-const { Record } = require('libp2p-record')
-const { encodeBase32 } = require('./utils')
+const { Key } = require("interface-datastore");
+const { Record } = require("libp2p-record");
+const { encodeBase32 } = require("./utils");
 
-const errcode = require('err-code')
-const debug = require('debug')
-const log = debug('ipfs:ipns:offline-datastore')
-log.error = debug('ipfs:ipns:offline-datastore:error')
+const errcode = require("err-code");
+const debug = require("debug");
+const log = debug("ipfs:ipns:offline-datastore");
+log.error = debug("ipfs:ipns:offline-datastore:error");
 
 // Offline datastore aims to mimic the same encoding as routing when storing records
 // to the local datastore
 class OfflineDatastore {
-  constructor (repo) {
-    this._repo = repo
+  constructor(repo) {
+    this._repo = repo;
   }
 
   /**
@@ -23,28 +23,38 @@ class OfflineDatastore {
    * @param {function(Error)} callback
    * @returns {void}
    */
-  async put (key, value) { // eslint-disable-line require-await
+  async put(key, value) {
+    // eslint-disable-line require-await
     if (!Buffer.isBuffer(key)) {
-      throw errcode(new Error('Offline datastore key must be a buffer'), 'ERR_INVALID_KEY')
+      throw errcode(
+        new Error("Offline datastore key must be a buffer"),
+        "ERR_INVALID_KEY"
+      );
     }
 
     if (!Buffer.isBuffer(value)) {
-      throw errcode(new Error('Offline datastore value must be a buffer'), 'ERR_INVALID_VALUE')
+      throw errcode(
+        new Error("Offline datastore value must be a buffer"),
+        "ERR_INVALID_VALUE"
+      );
     }
 
-    let routingKey
+    let routingKey;
 
     try {
-      routingKey = this._routingKey(key)
+      routingKey = this._routingKey(key);
     } catch (err) {
-      log.error(err)
-      throw errcode(new Error('Not possible to generate the routing key'), 'ERR_GENERATING_ROUTING_KEY')
+      log.error(err);
+      throw errcode(
+        new Error("Not possible to generate the routing key"),
+        "ERR_GENERATING_ROUTING_KEY"
+      );
     }
 
     // Marshal to libp2p record as the DHT does
-    const record = new Record(key, value)
+    const record = new Record(key, value);
 
-    return this._repo.datastore.put(routingKey, record.serialize())
+    return this._repo.datastore.put(routingKey, record.serialize());
   }
 
   /**
@@ -53,38 +63,44 @@ class OfflineDatastore {
    * @param {function(Error, Buffer)} callback
    * @returns {void}
    */
-  async get (key) {
+  async get(key) {
     if (!Buffer.isBuffer(key)) {
-      throw errcode(new Error('Offline datastore key must be a buffer'), 'ERR_INVALID_KEY')
+      throw errcode(
+        new Error("Offline datastore key must be a buffer"),
+        "ERR_INVALID_KEY"
+      );
     }
 
-    let routingKey
+    let routingKey;
 
     try {
-      routingKey = this._routingKey(key)
+      routingKey = this._routingKey(key);
     } catch (err) {
-      log.error(err)
-      throw errcode(new Error('Not possible to generate the routing key'), 'ERR_GENERATING_ROUTING_KEY')
+      log.error(err);
+      throw errcode(
+        new Error("Not possible to generate the routing key"),
+        "ERR_GENERATING_ROUTING_KEY"
+      );
     }
 
-    const res = await this._repo.datastore.get(routingKey)
+    const res = await this._repo.datastore.get(routingKey);
 
     // Unmarshal libp2p record as the DHT does
-    let record
+    let record;
     try {
-      record = Record.deserialize(res)
+      record = Record.deserialize(res);
     } catch (err) {
-      log.error(err)
-      throw (err)
+      log.error(err);
+      throw err;
     }
 
-    return record.value
+    return record.value;
   }
 
   // encode key properly - base32(/ipns/{cid})
-  _routingKey (key) {
-    return new Key('/' + encodeBase32(key), false)
+  _routingKey(key) {
+    return new Key("/" + encodeBase32(key), false);
   }
 }
 
-exports = module.exports = OfflineDatastore
+exports = module.exports = OfflineDatastore;

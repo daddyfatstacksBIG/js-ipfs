@@ -1,116 +1,117 @@
-'use strict'
+"use strict";
 
-const Block = require('ipfs-block')
-const multihashing = require('multihashing-async')
-const CID = require('cids')
-const callbackify = require('callbackify')
-const errCode = require('err-code')
+const Block = require("ipfs-block");
+const multihashing = require("multihashing-async");
+const CID = require("cids");
+const callbackify = require("callbackify");
+const errCode = require("err-code");
 
-module.exports = function block (self) {
+module.exports = function block(self) {
   return {
-    get: callbackify.variadic(async (cid, options) => { // eslint-disable-line require-await
-      options = options || {}
+    get: callbackify.variadic(async (cid, options) => {
+      // eslint-disable-line require-await
+      options = options || {};
 
       try {
-        cid = cleanCid(cid)
+        cid = cleanCid(cid);
       } catch (err) {
-        throw errCode(err, 'ERR_INVALID_CID')
+        throw errCode(err, "ERR_INVALID_CID");
       }
 
       if (options.preload !== false) {
-        self._preload(cid)
+        self._preload(cid);
       }
 
-      return self._blockService.get(cid)
+      return self._blockService.get(cid);
     }),
     put: callbackify.variadic(async (block, options) => {
-      options = options || {}
+      options = options || {};
 
       if (Array.isArray(block)) {
-        throw new Error('Array is not supported')
+        throw new Error("Array is not supported");
       }
 
       if (!Block.isBlock(block)) {
         if (options.cid && CID.isCID(options.cid)) {
-          block = new Block(block, options.cid)
+          block = new Block(block, options.cid);
         } else {
-          const mhtype = options.mhtype || 'sha2-256'
-          const format = options.format || 'dag-pb'
-          let cidVersion
+          const mhtype = options.mhtype || "sha2-256";
+          const format = options.format || "dag-pb";
+          let cidVersion;
 
           if (options.version == null) {
             // Pick appropriate CID version
-            cidVersion = mhtype === 'sha2-256' && format === 'dag-pb' ? 0 : 1
+            cidVersion = mhtype === "sha2-256" && format === "dag-pb" ? 0 : 1;
           } else {
-            cidVersion = options.version
+            cidVersion = options.version;
           }
 
-          const multihash = await multihashing(block, mhtype)
-          const cid = new CID(cidVersion, format, multihash)
+          const multihash = await multihashing(block, mhtype);
+          const cid = new CID(cidVersion, format, multihash);
 
-          block = new Block(block, cid)
+          block = new Block(block, cid);
         }
       }
 
-      const release = await self._gcLock.readLock()
+      const release = await self._gcLock.readLock();
 
       try {
-        await self._blockService.put(block)
+        await self._blockService.put(block);
 
         if (options.preload !== false) {
-          self._preload(block.cid)
+          self._preload(block.cid);
         }
 
-        return block
+        return block;
       } finally {
-        release()
+        release();
       }
     }),
-    rm: callbackify(async (cid) => {
+    rm: callbackify(async cid => {
       try {
-        cid = cleanCid(cid)
+        cid = cleanCid(cid);
       } catch (err) {
-        throw errCode(err, 'ERR_INVALID_CID')
+        throw errCode(err, "ERR_INVALID_CID");
       }
 
       // We need to take a write lock here to ensure that adding and removing
       // blocks are exclusive operations
-      const release = await self._gcLock.writeLock()
+      const release = await self._gcLock.writeLock();
 
       try {
-        await self._blockService.delete(cid)
+        await self._blockService.delete(cid);
       } finally {
-        release()
+        release();
       }
     }),
     stat: callbackify.variadic(async (cid, options) => {
-      options = options || {}
+      options = options || {};
 
       try {
-        cid = cleanCid(cid)
+        cid = cleanCid(cid);
       } catch (err) {
-        throw errCode(err, 'ERR_INVALID_CID')
+        throw errCode(err, "ERR_INVALID_CID");
       }
 
       if (options.preload !== false) {
-        self._preload(cid)
+        self._preload(cid);
       }
 
-      const block = await self._blockService.get(cid)
+      const block = await self._blockService.get(cid);
 
       return {
         key: cid.toString(),
         size: block.data.length
-      }
+      };
     })
-  }
-}
+  };
+};
 
-function cleanCid (cid) {
+function cleanCid(cid) {
   if (CID.isCID(cid)) {
-    return cid
+    return cid;
   }
 
   // CID constructor knows how to do the cleaning :)
-  return new CID(cid)
+  return new CID(cid);
 }

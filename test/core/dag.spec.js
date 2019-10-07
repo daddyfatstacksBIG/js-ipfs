@@ -1,61 +1,61 @@
 /* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-env mocha */
-'use strict'
+"use strict";
 
-const { expect } = require('interface-ipfs-core/src/utils/mocha')
-const IPFSFactory = require('ipfsd-ctl')
-const IPFS = require('../../src/core')
+const { expect } = require("interface-ipfs-core/src/utils/mocha");
+const IPFSFactory = require("ipfsd-ctl");
+const IPFS = require("../../src/core");
 
-describe('dag', function () {
-  this.timeout(10 * 1000)
-  let ipfsd, ipfs
+describe("dag", function() {
+  this.timeout(10 * 1000);
+  let ipfsd, ipfs;
 
   before(async () => {
     const factory = IPFSFactory.create({
-      type: 'proc',
-      IpfsClient: require('ipfs-http-client')
-    })
+      type: "proc",
+      IpfsClient: require("ipfs-http-client")
+    });
 
     ipfsd = await factory.spawn({
       exec: IPFS,
       initOptions: { bits: 512 },
       config: { Bootstrap: [] },
       preload: { enabled: false }
-    })
-    ipfs = ipfsd.api
-  })
+    });
+    ipfs = ipfsd.api;
+  });
 
   after(() => {
     if (ipfsd) {
-      return ipfsd.stop()
+      return ipfsd.stop();
     }
-  })
+  });
 
-  describe('get', () => {
-    it('should callback with error for invalid string CID input', (done) => {
-      ipfs.dag.get('INVALID CID', (err) => {
-        expect(err).to.exist()
-        expect(err.code).to.equal('ERR_INVALID_CID')
-        done()
-      })
-    })
+  describe("get", () => {
+    it("should callback with error for invalid string CID input", done => {
+      ipfs.dag.get("INVALID CID", err => {
+        expect(err).to.exist();
+        expect(err.code).to.equal("ERR_INVALID_CID");
+        done();
+      });
+    });
 
-    it('should callback with error for invalid buffer CID input', (done) => {
-      ipfs.dag.get(Buffer.from('INVALID CID'), (err) => {
-        expect(err).to.exist()
-        expect(err.code).to.equal('ERR_INVALID_CID')
-        done()
-      })
-    })
-  })
+    it("should callback with error for invalid buffer CID input", done => {
+      ipfs.dag.get(Buffer.from("INVALID CID"), err => {
+        expect(err).to.exist();
+        expect(err.code).to.equal("ERR_INVALID_CID");
+        done();
+      });
+    });
+  });
 
-  describe('tree', () => {
-    it('should callback with error for invalid CID input', (done) => {
-      ipfs.dag.tree('INVALID CID', (err) => {
-        expect(err).to.exist()
-        expect(err.code).to.equal('ERR_INVALID_CID')
-        done()
-      })
-    })
-  })
-})
+  describe("tree", () => {
+    it("should callback with error for invalid CID input", done => {
+      ipfs.dag.tree("INVALID CID", err => {
+        expect(err).to.exist();
+        expect(err.code).to.equal("ERR_INVALID_CID");
+        done();
+      });
+    });
+  });
+});

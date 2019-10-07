@@ -1,37 +1,37 @@
-'use strict'
+"use strict";
 
-const mfs = require('ipfs-mfs/core')
-const isPullStream = require('is-pull-stream')
-const toPullStream = require('async-iterator-to-pull-stream')
-const toReadableStream = require('async-iterator-to-stream')
-const pullStreamToAsyncIterator = require('pull-stream-to-async-iterator')
-const all = require('async-iterator-all')
-const nodeify = require('promise-nodeify')
-const PassThrough = require('stream').PassThrough
-const pull = require('pull-stream/pull')
-const map = require('pull-stream/throughs/map')
-const isIpfs = require('is-ipfs')
-const { cidToString } = require('../../utils/cid')
+const mfs = require("ipfs-mfs/core");
+const isPullStream = require("is-pull-stream");
+const toPullStream = require("async-iterator-to-pull-stream");
+const toReadableStream = require("async-iterator-to-stream");
+const pullStreamToAsyncIterator = require("pull-stream-to-async-iterator");
+const all = require("async-iterator-all");
+const nodeify = require("promise-nodeify");
+const PassThrough = require("stream").PassThrough;
+const pull = require("pull-stream/pull");
+const map = require("pull-stream/throughs/map");
+const isIpfs = require("is-ipfs");
+const { cidToString } = require("../../utils/cid");
 
 /**
  * @typedef { import("readable-stream").Readable } ReadableStream
  * @typedef { import("pull-stream") } PullStream
  */
 
-const mapLsFile = (options) => {
-  options = options || {}
+const mapLsFile = options => {
+  options = options || {};
 
-  const long = options.long || options.l
+  const long = options.long || options.l;
 
-  return (file) => {
+  return file => {
     return {
-      hash: long ? cidToString(file.cid, { base: options.cidBase }) : '',
+      hash: long ? cidToString(file.cid, { base: options.cidBase }) : "",
       name: file.name,
       type: long ? file.type : 0,
       size: long ? file.size || 0 : 0
-    }
-  }
-}
+    };
+  };
+};
 
 module.exports = (/** @type { import("../index") } */ ipfs) => {
   const methodsOriginal = mfs({
@@ -39,20 +39,20 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
     blocks: ipfs._blockService,
     datastore: ipfs._repo.root,
     repoOwner: ipfs._options.repoOwner
-  })
+  });
 
   const withPreload = fn => (...args) => {
-    const paths = args.filter(arg => isIpfs.ipfsPath(arg) || isIpfs.cid(arg))
+    const paths = args.filter(arg => isIpfs.ipfsPath(arg) || isIpfs.cid(arg));
 
     if (paths.length) {
-      const options = args[args.length - 1]
+      const options = args[args.length - 1];
       if (options && options.preload !== false) {
-        paths.forEach(path => ipfs._preload(path))
+        paths.forEach(path => ipfs._preload(path));
       }
     }
 
-    return fn(...args)
-  }
+    return fn(...args);
+  };
 
   const methods = {
     ...methodsOriginal,
@@ -61,7 +61,7 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
     mv: withPreload(methodsOriginal.mv),
     read: withPreload(methodsOriginal.read),
     stat: withPreload(methodsOriginal.stat)
-  }
+  };
 
   return {
     /**
@@ -78,11 +78,11 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @returns {Promise<string> | void} When callback is provided nothing is returned.
      */
     cp: (from, to, opts, cb) => {
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-      return nodeify(methods.cp(from, to, opts), cb)
+      return nodeify(methods.cp(from, to, opts), cb);
     },
 
     /**
@@ -98,11 +98,11 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @returns {Promise<undefined> | void} When callback is provided nothing is returned.
      */
     mkdir: (path, opts, cb) => {
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-      return nodeify(methods.mkdir(path, opts), cb)
+      return nodeify(methods.mkdir(path, opts), cb);
     },
 
     /**
@@ -131,20 +131,20 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      */
     stat: (path, opts, cb) => {
       const stat = async (path, opts = {}) => {
-        const stats = await methods.stat(path, opts)
+        const stats = await methods.stat(path, opts);
 
-        stats.hash = stats.cid.toBaseEncodedString(opts && opts.cidBase)
-        delete stats.cid
+        stats.hash = stats.cid.toBaseEncodedString(opts && opts.cidBase);
+        delete stats.cid;
 
-        return stats
+        return stats;
+      };
+
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
 
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
-      }
-
-      return nodeify(stat(path, opts), cb)
+      return nodeify(stat(path, opts), cb);
     },
 
     /**
@@ -157,11 +157,11 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @returns {Promise<undefined> | void} When callback is provided nothing is returned.
      */
     rm: (paths, opts, cb) => {
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-      return nodeify(methods.rm(paths, opts), cb)
+      return nodeify(methods.rm(paths, opts), cb);
     },
 
     /**
@@ -180,14 +180,14 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      */
     read: (path, opts, cb) => {
       const read = async (path, opts = {}) => {
-        return Buffer.concat(await all(methods.read(path, opts)))
-      }
+        return Buffer.concat(await all(methods.read(path, opts)));
+      };
 
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-      return nodeify(read(path, opts), cb)
+      return nodeify(read(path, opts), cb);
     },
 
     /**
@@ -197,7 +197,8 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @param {ReadOptions} [opts] - Object for read.
      * @returns {ReadableStream} Returns a ReadableStream with the contents of path.
      */
-    readReadableStream: (path, opts = {}) => toReadableStream(methods.read(path, opts)),
+    readReadableStream: (path, opts = {}) =>
+      toReadableStream(methods.read(path, opts)),
 
     /**
      * Read a file into a PullStrean.
@@ -206,7 +207,8 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @param {ReadOptions} [opts] - Object for read.
      * @returns {PullStream} Returns a PullStream with the contents of path.
      */
-    readPullStream: (path, opts = {}) => toPullStream.source(methods.read(path, opts)),
+    readPullStream: (path, opts = {}) =>
+      toPullStream.source(methods.read(path, opts)),
 
     /**
      * Write to a file.
@@ -227,16 +229,16 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
     write: (path, content, opts, cb) => {
       const write = async (path, content, opts = {}) => {
         if (isPullStream.isSource(content)) {
-          content = pullStreamToAsyncIterator(content)
+          content = pullStreamToAsyncIterator(content);
         }
 
-        await methods.write(path, content, opts)
+        await methods.write(path, content, opts);
+      };
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
-      }
-      return nodeify(write(path, content, opts), cb)
+      return nodeify(write(path, content, opts), cb);
     },
 
     /**
@@ -263,11 +265,11 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * All values of from will be removed after the operation is complete unless they are an IPFS path.
      */
     mv: (from, to, opts, cb) => {
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-      return nodeify(methods.mv(from, to, opts), cb)
+      return nodeify(methods.mv(from, to, opts), cb);
     },
 
     /**
@@ -278,11 +280,11 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @returns {Promise<undefined> | void} When callback is provided nothing is returned.
      */
     flush: (paths, cb) => {
-      if (typeof paths === 'function') {
-        cb = paths
-        paths = undefined
+      if (typeof paths === "function") {
+        cb = paths;
+        paths = undefined;
       }
-      return nodeify(methods.flush(paths), cb)
+      return nodeify(methods.flush(paths), cb);
     },
 
     /**
@@ -310,22 +312,22 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      */
     ls: (path, opts, cb) => {
       const ls = async (path, opts = {}) => {
-        const files = await all(methods.ls(path, opts))
+        const files = await all(methods.ls(path, opts));
 
-        return files.map(mapLsFile(opts))
+        return files.map(mapLsFile(opts));
+      };
+
+      if (typeof path === "function") {
+        cb = path;
+        path = "/";
+        opts = {};
       }
 
-      if (typeof path === 'function') {
-        cb = path
-        path = '/'
-        opts = {}
+      if (typeof opts === "function") {
+        cb = opts;
+        opts = {};
       }
-
-      if (typeof opts === 'function') {
-        cb = opts
-        opts = {}
-      }
-      return nodeify(ls(path, opts), cb)
+      return nodeify(ls(path, opts), cb);
     },
 
     /**
@@ -336,25 +338,25 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
      * @returns {ReadableStream} It returns a Readable Stream in Object mode that will yield {@link ListOutputFile}
      */
     lsReadableStream: (path, opts = {}) => {
-      const stream = toReadableStream.obj(methods.ls(path, opts))
+      const stream = toReadableStream.obj(methods.ls(path, opts));
       const through = new PassThrough({
         objectMode: true
-      })
-      stream.on('data', (file) => {
-        through.write(mapLsFile(opts)(file))
-      })
-      stream.on('error', (err) => {
-        through.destroy(err)
-      })
-      stream.on('end', (file, enc, cb) => {
+      });
+      stream.on("data", file => {
+        through.write(mapLsFile(opts)(file));
+      });
+      stream.on("error", err => {
+        through.destroy(err);
+      });
+      stream.on("end", (file, enc, cb) => {
         if (file) {
-          file = mapLsFile(opts)(file)
+          file = mapLsFile(opts)(file);
         }
 
-        through.end(file, enc, cb)
-      })
+        through.end(file, enc, cb);
+      });
 
-      return through
+      return through;
     },
 
     /**
@@ -368,7 +370,7 @@ module.exports = (/** @type { import("../index") } */ ipfs) => {
       return pull(
         toPullStream.source(methods.ls(path, opts)),
         map(mapLsFile(opts))
-      )
+      );
     }
-  }
-}
+  };
+};

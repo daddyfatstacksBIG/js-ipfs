@@ -1,410 +1,425 @@
 /* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-env mocha */
-'use strict'
+"use strict";
 
-const hat = require('hat')
-const { expect } = require('interface-ipfs-core/src/utils/mocha')
-const DAGNode = require('ipld-dag-pb').DAGNode
-const Readable = require('stream').Readable
-const FormData = require('form-data')
-const streamToPromise = require('stream-to-promise')
-const CID = require('cids')
+const hat = require("hat");
+const { expect } = require("interface-ipfs-core/src/utils/mocha");
+const DAGNode = require("ipld-dag-pb").DAGNode;
+const Readable = require("stream").Readable;
+const FormData = require("form-data");
+const streamToPromise = require("stream-to-promise");
+const CID = require("cids");
 
-const toHeadersAndPayload = async (thing) => {
-  const stream = new Readable()
-  stream.push(thing)
-  stream.push(null)
+const toHeadersAndPayload = async thing => {
+  const stream = new Readable();
+  stream.push(thing);
+  stream.push(null);
 
-  const form = new FormData()
-  form.append('file', stream)
+  const form = new FormData();
+  form.append("file", stream);
 
   return {
     headers: form.getHeaders(),
     payload: await streamToPromise(form)
-  }
-}
+  };
+};
 
-module.exports = (http) => {
-  describe('dag endpoint', () => {
-    let api
+module.exports = http => {
+  describe("dag endpoint", () => {
+    let api;
 
     before(() => {
-      api = http.api._httpApi._apiServers[0]
-    })
+      api = http.api._httpApi._apiServers[0];
+    });
 
-    describe('/dag/get', () => {
-      it('returns error for request without argument', async () => {
+    describe("/dag/get", () => {
+      it("returns error for request without argument", async () => {
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/get'
-        })
+          method: "POST",
+          url: "/api/v0/dag/get"
+        });
 
-        expect(res.statusCode).to.equal(400)
-        expect(res.result.Message).to.include("Argument 'key' is required")
-      })
+        expect(res.statusCode).to.equal(400);
+        expect(res.result.Message).to.include("Argument 'key' is required");
+      });
 
-      it('returns error for request with invalid argument', async () => {
+      it("returns error for request with invalid argument", async () => {
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/get?arg=5'
-        })
+          method: "POST",
+          url: "/api/v0/dag/get?arg=5"
+        });
 
-        expect(res.statusCode).to.equal(400)
-        expect(res.result.Message).to.include("invalid 'ipfs ref' path")
-      })
+        expect(res.statusCode).to.equal(400);
+        expect(res.result.Message).to.include("invalid 'ipfs ref' path");
+      });
 
-      it('returns value', async () => {
-        const node = new DAGNode(Buffer.from([]), [])
+      it("returns value", async () => {
+        const node = new DAGNode(Buffer.from([]), []);
         const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-pb',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-pb",
+          hashAlg: "sha2-256"
+        });
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.be.ok()
-        expect(res.result.links).to.be.empty()
-        expect(res.result.data).to.be.empty()
-      })
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.be.ok();
+        expect(res.result.links).to.be.empty();
+        expect(res.result.data).to.be.empty();
+      });
 
-      it('uses text encoding for data by default', async () => {
-        const node = new DAGNode(Buffer.from([0, 1, 2, 3]), [])
+      it("uses text encoding for data by default", async () => {
+        const node = new DAGNode(Buffer.from([0, 1, 2, 3]), []);
         const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-pb',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-pb",
+          hashAlg: "sha2-256"
+        });
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.be.ok()
-        expect(res.result.links).to.be.empty()
-        expect(res.result.data).to.equal('\u0000\u0001\u0002\u0003')
-      })
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.be.ok();
+        expect(res.result.links).to.be.empty();
+        expect(res.result.data).to.equal("\u0000\u0001\u0002\u0003");
+      });
 
-      it('overrides data encoding', async () => {
-        const node = new DAGNode(Buffer.from([0, 1, 2, 3]), [])
+      it("overrides data encoding", async () => {
+        const node = new DAGNode(Buffer.from([0, 1, 2, 3]), []);
         const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-pb',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-pb",
+          hashAlg: "sha2-256"
+        });
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}&data-encoding=base64`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.be.ok()
-        expect(res.result.links).to.be.empty()
-        expect(res.result.data).to.equal('AAECAw==')
-      })
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.be.ok();
+        expect(res.result.links).to.be.empty();
+        expect(res.result.data).to.equal("AAECAw==");
+      });
 
-      it('returns value with a path as part of the cid', async () => {
-        const cid = await http.api._ipfs.dag.put({
-          foo: 'bar'
-        }, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
-
-        const res = await api.inject({
-          method: 'POST',
-          url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}/foo`
-        })
-
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.equal('bar')
-      })
-
-      it('returns value with a path as part of the cid for dag-pb nodes', async () => {
-        const node = new DAGNode(Buffer.from([0, 1, 2, 3]), [])
-        const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-pb',
-          hashAlg: 'sha2-256'
-        })
-
-        const res = await api.inject({
-          method: 'POST',
-          url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}/Data&data-encoding=base64`
-        })
-
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.equal('AAECAw==')
-      })
-
-      it('encodes buffers in arbitrary positions', async () => {
-        const cid = await http.api._ipfs.dag.put({
-          foo: 'bar',
-          baz: {
-            qux: Buffer.from([0, 1, 2, 3])
+      it("returns value with a path as part of the cid", async () => {
+        const cid = await http.api._ipfs.dag.put(
+          {
+            foo: "bar"
+          },
+          {
+            format: "dag-cbor",
+            hashAlg: "sha2-256"
           }
-        }, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+        );
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
+          url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}/foo`
+        });
+
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.equal("bar");
+      });
+
+      it("returns value with a path as part of the cid for dag-pb nodes", async () => {
+        const node = new DAGNode(Buffer.from([0, 1, 2, 3]), []);
+        const cid = await http.api._ipfs.dag.put(node, {
+          format: "dag-pb",
+          hashAlg: "sha2-256"
+        });
+
+        const res = await api.inject({
+          method: "POST",
+          url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}/Data&data-encoding=base64`
+        });
+
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.equal("AAECAw==");
+      });
+
+      it("encodes buffers in arbitrary positions", async () => {
+        const cid = await http.api._ipfs.dag.put(
+          {
+            foo: "bar",
+            baz: {
+              qux: Buffer.from([0, 1, 2, 3])
+            }
+          },
+          {
+            format: "dag-cbor",
+            hashAlg: "sha2-256"
+          }
+        );
+
+        const res = await api.inject({
+          method: "POST",
           url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}&data-encoding=base64`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result.baz.qux).to.equal('AAECAw==')
-      })
+        expect(res.statusCode).to.equal(200);
+        expect(res.result.baz.qux).to.equal("AAECAw==");
+      });
 
-      it('supports specifying buffer encoding', async () => {
-        const cid = await http.api._ipfs.dag.put({
-          foo: 'bar',
-          baz: Buffer.from([0, 1, 2, 3])
-        }, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+      it("supports specifying buffer encoding", async () => {
+        const cid = await http.api._ipfs.dag.put(
+          {
+            foo: "bar",
+            baz: Buffer.from([0, 1, 2, 3])
+          },
+          {
+            format: "dag-cbor",
+            hashAlg: "sha2-256"
+          }
+        );
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/get?arg=${cid.toBaseEncodedString()}&data-encoding=hex`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result.baz).to.equal('00010203')
-      })
-    })
+        expect(res.statusCode).to.equal(200);
+        expect(res.result.baz).to.equal("00010203");
+      });
+    });
 
-    describe('/dag/put', () => {
-      it('returns error for request without file argument', async () => {
+    describe("/dag/put", () => {
+      it("returns error for request without file argument", async () => {
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/put'
-        })
+          method: "POST",
+          url: "/api/v0/dag/put"
+        });
 
-        expect(res.statusCode).to.equal(400)
-        expect(res.result.Message).to.include("File argument 'object data' is required")
-      })
+        expect(res.statusCode).to.equal(400);
+        expect(res.result.Message).to.include(
+          "File argument 'object data' is required"
+        );
+      });
 
-      it('adds a dag-cbor node by default', async () => {
+      it("adds a dag-cbor node by default", async () => {
         const node = {
-          foo: 'bar'
-        }
+          foo: "bar"
+        };
 
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/put',
-          ...await toHeadersAndPayload(JSON.stringify(node))
-        })
+          method: "POST",
+          url: "/api/v0/dag/put",
+          ...(await toHeadersAndPayload(JSON.stringify(node)))
+        });
 
-        expect(res.statusCode).to.equal(200)
+        expect(res.statusCode).to.equal(200);
 
-        const cid = new CID(res.result.Cid['/'])
+        const cid = new CID(res.result.Cid["/"]);
 
-        expect(cid.codec).to.equal('dag-cbor')
+        expect(cid.codec).to.equal("dag-cbor");
 
-        const added = await http.api._ipfs.dag.get(cid)
+        const added = await http.api._ipfs.dag.get(cid);
 
-        expect(added.value).to.deep.equal(node)
-      })
+        expect(added.value).to.deep.equal(node);
+      });
 
-      it('adds a dag-pb node', async () => {
+      it("adds a dag-pb node", async () => {
         const node = {
           data: [],
           links: []
-        }
+        };
 
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/put?format=dag-pb',
-          ...await toHeadersAndPayload(JSON.stringify(node))
-        })
+          method: "POST",
+          url: "/api/v0/dag/put?format=dag-pb",
+          ...(await toHeadersAndPayload(JSON.stringify(node)))
+        });
 
-        expect(res.statusCode).to.equal(200)
+        expect(res.statusCode).to.equal(200);
 
-        const cid = new CID(res.result.Cid['/'])
+        const cid = new CID(res.result.Cid["/"]);
 
-        expect(cid.codec).to.equal('dag-pb')
+        expect(cid.codec).to.equal("dag-pb");
 
-        const added = await http.api._ipfs.dag.get(cid)
+        const added = await http.api._ipfs.dag.get(cid);
 
-        expect(added.value.Data).to.be.empty()
-        expect(added.value.Links).to.be.empty()
-      })
+        expect(added.value.Data).to.be.empty();
+        expect(added.value.Links).to.be.empty();
+      });
 
-      it('adds a raw node', async () => {
-        const node = Buffer.from([0, 1, 2, 3])
+      it("adds a raw node", async () => {
+        const node = Buffer.from([0, 1, 2, 3]);
 
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/put?format=raw',
-          ...await toHeadersAndPayload(node)
-        })
+          method: "POST",
+          url: "/api/v0/dag/put?format=raw",
+          ...(await toHeadersAndPayload(node))
+        });
 
-        expect(res.statusCode).to.equal(200)
+        expect(res.statusCode).to.equal(200);
 
-        const cid = new CID(res.result.Cid['/'])
+        const cid = new CID(res.result.Cid["/"]);
 
-        expect(cid.codec).to.equal('raw')
+        expect(cid.codec).to.equal("raw");
 
-        const added = await http.api._ipfs.dag.get(cid)
+        const added = await http.api._ipfs.dag.get(cid);
 
-        expect(added.value).to.deep.equal(node)
-      })
+        expect(added.value).to.deep.equal(node);
+      });
 
-      it('pins a node after adding', async () => {
+      it("pins a node after adding", async () => {
         const node = {
-          foo: 'bar',
+          foo: "bar",
           disambiguator: hat()
-        }
+        };
 
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/put?pin=true',
-          ...await toHeadersAndPayload(JSON.stringify(node))
-        })
+          method: "POST",
+          url: "/api/v0/dag/put?pin=true",
+          ...(await toHeadersAndPayload(JSON.stringify(node)))
+        });
 
-        expect(res.statusCode).to.equal(200)
+        expect(res.statusCode).to.equal(200);
 
-        const cid = new CID(res.result.Cid['/'])
-        const pinset = await http.api._ipfs.pin.ls()
+        const cid = new CID(res.result.Cid["/"]);
+        const pinset = await http.api._ipfs.pin.ls();
 
-        expect(pinset.map(pin => pin.hash)).to.contain(cid.toBaseEncodedString())
-      })
+        expect(pinset.map(pin => pin.hash)).to.contain(
+          cid.toBaseEncodedString()
+        );
+      });
 
-      it('does not pin a node after adding', async () => {
+      it("does not pin a node after adding", async () => {
         const node = {
-          foo: 'bar',
+          foo: "bar",
           disambiguator: hat()
-        }
+        };
 
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/put?pin=false',
-          ...await toHeadersAndPayload(JSON.stringify(node))
-        })
+          method: "POST",
+          url: "/api/v0/dag/put?pin=false",
+          ...(await toHeadersAndPayload(JSON.stringify(node)))
+        });
 
-        expect(res.statusCode).to.equal(200)
+        expect(res.statusCode).to.equal(200);
 
-        const cid = new CID(res.result.Cid['/'])
-        const pinset = await http.api._ipfs.pin.ls()
+        const cid = new CID(res.result.Cid["/"]);
+        const pinset = await http.api._ipfs.pin.ls();
 
-        expect(pinset.map(pin => pin.hash)).to.not.contain(cid.toBaseEncodedString('base58btc'))
-      })
-    })
+        expect(pinset.map(pin => pin.hash)).to.not.contain(
+          cid.toBaseEncodedString("base58btc")
+        );
+      });
+    });
 
-    describe('/dag/resolve', () => {
-      it('returns error for request without argument', async () => {
+    describe("/dag/resolve", () => {
+      it("returns error for request without argument", async () => {
         const res = await api.inject({
-          method: 'POST',
-          url: '/api/v0/dag/resolve'
-        })
+          method: "POST",
+          url: "/api/v0/dag/resolve"
+        });
 
-        expect(res.statusCode).to.equal(400)
-        expect(res.result.Message).to.include('argument "ref" is required')
-      })
+        expect(res.statusCode).to.equal(400);
+        expect(res.result.Message).to.include('argument "ref" is required');
+      });
 
-      it('resolves a node', async () => {
+      it("resolves a node", async () => {
         const node = {
-          foo: 'bar'
-        }
+          foo: "bar"
+        };
         const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-cbor",
+          hashAlg: "sha2-256"
+        });
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/resolve?arg=${cid.toBaseEncodedString()}`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.be.ok()
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.be.ok();
 
-        const returnedCid = new CID(res.result.Cid['/'])
-        const returnedRemainerPath = res.result.RemPath
+        const returnedCid = new CID(res.result.Cid["/"]);
+        const returnedRemainerPath = res.result.RemPath;
 
-        expect(returnedCid).to.deep.equal(cid)
-        expect(returnedRemainerPath).to.be.empty()
-      })
+        expect(returnedCid).to.deep.equal(cid);
+        expect(returnedRemainerPath).to.be.empty();
+      });
 
-      it('returns the remainder path from within the resolved node', async () => {
+      it("returns the remainder path from within the resolved node", async () => {
         const node = {
-          foo: 'bar'
-        }
+          foo: "bar"
+        };
         const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-cbor",
+          hashAlg: "sha2-256"
+        });
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/resolve?arg=${cid.toBaseEncodedString()}/foo`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.be.ok()
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.be.ok();
 
-        const returnedCid = new CID(res.result.Cid['/'])
-        const returnedRemainerPath = res.result.RemPath
+        const returnedCid = new CID(res.result.Cid["/"]);
+        const returnedRemainerPath = res.result.RemPath;
 
-        expect(returnedCid).to.deep.equal(cid)
-        expect(returnedRemainerPath).to.equal('foo')
-      })
+        expect(returnedCid).to.deep.equal(cid);
+        expect(returnedRemainerPath).to.equal("foo");
+      });
 
-      it('returns an error when the path is not available', async () => {
+      it("returns an error when the path is not available", async () => {
         const node = {
-          foo: 'bar'
-        }
+          foo: "bar"
+        };
         const cid = await http.api._ipfs.dag.put(node, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-cbor",
+          hashAlg: "sha2-256"
+        });
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/resolve?arg=${cid.toBaseEncodedString()}/bar`
-        })
+        });
 
-        expect(res.statusCode).to.equal(500)
-        expect(res.result).to.be.ok()
-      })
+        expect(res.statusCode).to.equal(500);
+        expect(res.result).to.be.ok();
+      });
 
-      it('resolves across multiple nodes, returning the CID of the last node traversed', async () => {
+      it("resolves across multiple nodes, returning the CID of the last node traversed", async () => {
         const node2 = {
-          bar: 'baz'
-        }
+          bar: "baz"
+        };
         const cid2 = await http.api._ipfs.dag.put(node2, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-cbor",
+          hashAlg: "sha2-256"
+        });
 
         const node1 = {
           foo: cid2
-        }
+        };
 
         const cid1 = await http.api._ipfs.dag.put(node1, {
-          format: 'dag-cbor',
-          hashAlg: 'sha2-256'
-        })
+          format: "dag-cbor",
+          hashAlg: "sha2-256"
+        });
 
         const res = await api.inject({
-          method: 'POST',
+          method: "POST",
           url: `/api/v0/dag/resolve?arg=${cid1.toBaseEncodedString()}/foo/bar`
-        })
+        });
 
-        expect(res.statusCode).to.equal(200)
-        expect(res.result).to.be.ok()
+        expect(res.statusCode).to.equal(200);
+        expect(res.result).to.be.ok();
 
-        const returnedCid = new CID(res.result.Cid['/'])
-        const returnedRemainerPath = res.result.RemPath
+        const returnedCid = new CID(res.result.Cid["/"]);
+        const returnedRemainerPath = res.result.RemPath;
 
-        expect(returnedCid).to.deep.equal(cid2)
-        expect(returnedRemainerPath).to.equal('bar')
-      })
-    })
-  })
-}
+        expect(returnedCid).to.deep.equal(cid2);
+        expect(returnedRemainerPath).to.equal("bar");
+      });
+    });
+  });
+};

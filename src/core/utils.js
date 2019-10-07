@@ -1,10 +1,11 @@
-'use strict'
+"use strict";
 
-const isIpfs = require('is-ipfs')
-const CID = require('cids')
+const isIpfs = require("is-ipfs");
+const CID = require("cids");
 
-const ERR_BAD_PATH = 'ERR_BAD_PATH'
-exports.OFFLINE_ERROR = 'This command must be run in online mode. Try running \'ipfs daemon\' first.'
+const ERR_BAD_PATH = "ERR_BAD_PATH";
+exports.OFFLINE_ERROR =
+  "This command must be run in online mode. Try running 'ipfs daemon' first.";
 
 /**
  * Break an ipfs-path down into it's hash and an array of links.
@@ -18,21 +19,21 @@ exports.OFFLINE_ERROR = 'This command must be run in online mode. Try running \'
  * @return {Object}            { hash: base58 string, links: [string], ?err: Error }
  * @throws on an invalid @param ipfsPath
  */
-function parseIpfsPath (ipfsPath) {
-  const invalidPathErr = new Error('invalid ipfs ref path')
-  ipfsPath = ipfsPath.replace(/^\/ipfs\//, '')
-  const matched = ipfsPath.match(/([^/]+(?:\/[^/]+)*)\/?$/)
+function parseIpfsPath(ipfsPath) {
+  const invalidPathErr = new Error("invalid ipfs ref path");
+  ipfsPath = ipfsPath.replace(/^\/ipfs\//, "");
+  const matched = ipfsPath.match(/([^/]+(?:\/[^/]+)*)\/?$/);
   if (!matched) {
-    throw invalidPathErr
+    throw invalidPathErr;
   }
 
-  const [hash, ...links] = matched[1].split('/')
+  const [hash, ...links] = matched[1].split("/");
 
   // check that a CID can be constructed with the hash
   if (isIpfs.cid(hash)) {
-    return { hash, links }
+    return { hash, links };
   } else {
-    throw invalidPathErr
+    throw invalidPathErr;
   }
 }
 
@@ -49,15 +50,17 @@ function parseIpfsPath (ipfsPath) {
  * @return {String} ipfs-path or ipns-path
  * @throws on an invalid @param ipfsPath
  */
-const normalizePath = (pathStr) => {
+const normalizePath = pathStr => {
   if (isIpfs.cid(pathStr)) {
-    return `/ipfs/${pathStr}`
+    return `/ipfs/${pathStr}`;
   } else if (isIpfs.path(pathStr)) {
-    return pathStr
+    return pathStr;
   } else {
-    throw Object.assign(new Error(`invalid ${pathStr} path`), { code: ERR_BAD_PATH })
+    throw Object.assign(new Error(`invalid ${pathStr} path`), {
+      code: ERR_BAD_PATH
+    });
   }
-}
+};
 
 /**
  * Resolve various styles of an ipfs-path to the hash of the target node.
@@ -74,56 +77,56 @@ const normalizePath = (pathStr) => {
  * @param  {?}    ipfsPaths A single or collection of ipfs-paths
  * @return {Promise<Array<CID>>}
  */
-const resolvePath = async function (objectAPI, ipfsPaths) {
+const resolvePath = async function(objectAPI, ipfsPaths) {
   if (!Array.isArray(ipfsPaths)) {
-    ipfsPaths = [ipfsPaths]
+    ipfsPaths = [ipfsPaths];
   }
 
-  const cids = []
+  const cids = [];
 
   for (const path of ipfsPaths) {
-    if (typeof path !== 'string') {
-      cids.push(new CID(path))
+    if (typeof path !== "string") {
+      cids.push(new CID(path));
 
-      continue
+      continue;
     }
 
-    const parsedPath = exports.parseIpfsPath(path)
-    let hash = new CID(parsedPath.hash)
-    let links = parsedPath.links
+    const parsedPath = exports.parseIpfsPath(path);
+    let hash = new CID(parsedPath.hash);
+    let links = parsedPath.links;
 
     if (!links.length) {
-      cids.push(hash)
+      cids.push(hash);
 
-      continue
+      continue;
     }
 
     // recursively follow named links to the target node
     while (true) {
-      const obj = await objectAPI.get(hash)
+      const obj = await objectAPI.get(hash);
 
       if (!links.length) {
         // done tracing, obj is the target node
-        cids.push(hash)
+        cids.push(hash);
 
-        break
+        break;
       }
 
-      const linkName = links[0]
-      const nextObj = obj.Links.find(link => link.Name === linkName)
+      const linkName = links[0];
+      const nextObj = obj.Links.find(link => link.Name === linkName);
 
       if (!nextObj) {
-        throw new Error(`no link named "${linkName}" under ${hash}`)
+        throw new Error(`no link named "${linkName}" under ${hash}`);
       }
 
-      hash = nextObj.Hash
-      links = links.slice(1)
+      hash = nextObj.Hash;
+      links = links.slice(1);
     }
   }
 
-  return cids
-}
+  return cids;
+};
 
-exports.normalizePath = normalizePath
-exports.parseIpfsPath = parseIpfsPath
-exports.resolvePath = resolvePath
+exports.normalizePath = normalizePath;
+exports.parseIpfsPath = parseIpfsPath;
+exports.resolvePath = resolvePath;

@@ -1,4 +1,4 @@
-'use strict'
+"use strict";
 
-require('./routes')
-require('./interface')
+require("./routes");
+require("./interface");

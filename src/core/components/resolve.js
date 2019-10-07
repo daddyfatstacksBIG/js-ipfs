@@ -1,9 +1,9 @@
-'use strict'
+"use strict";
 
-const isIpfs = require('is-ipfs')
-const CID = require('cids')
-const nodeify = require('promise-nodeify')
-const { cidToString } = require('../../utils/cid')
+const isIpfs = require("is-ipfs");
+const CID = require("cids");
+const nodeify = require("promise-nodeify");
+const { cidToString } = require("../../utils/cid");
 
 /**
  * @typedef { import("../index") } IPFS
@@ -32,7 +32,7 @@ const { cidToString } = require('../../utils/cid')
  * @param {IPFS} ipfs
  * @returns {ResolveWrapper}
  */
-module.exports = (ipfs) => {
+module.exports = ipfs => {
   /**
    * IPFS Resolve - Resolve the value of names to IPFS
    *
@@ -41,45 +41,47 @@ module.exports = (ipfs) => {
    * @returns {Promise<string>}
    */
   const resolve = async (name, opts) => {
-    opts = opts || {}
+    opts = opts || {};
 
     if (!isIpfs.path(name)) {
-      throw new Error('invalid argument ' + name)
+      throw new Error("invalid argument " + name);
     }
 
     if (isIpfs.ipnsPath(name)) {
-      name = await ipfs.name.resolve(name, opts)
+      name = await ipfs.name.resolve(name, opts);
     }
 
-    const [, , hash, ...rest] = name.split('/') // ['', 'ipfs', 'hash', ...path]
-    const cid = new CID(hash)
+    const [, , hash, ...rest] = name.split("/"); // ['', 'ipfs', 'hash', ...path]
+    const cid = new CID(hash);
 
     // nothing to resolve return the input
     if (rest.length === 0) {
-      return `/ipfs/${cidToString(cid, { base: opts.cidBase })}`
+      return `/ipfs/${cidToString(cid, { base: opts.cidBase })}`;
     }
 
-    const path = rest.join('/')
-    const results = ipfs._ipld.resolve(cid, path)
-    let value = cid
-    let remainderPath = path
+    const path = rest.join("/");
+    const results = ipfs._ipld.resolve(cid, path);
+    let value = cid;
+    let remainderPath = path;
 
     for await (const result of results) {
       if (CID.isCID(result.value)) {
-        value = result.value
-        remainderPath = result.remainderPath
+        value = result.value;
+        remainderPath = result.remainderPath;
       }
     }
 
-    return `/ipfs/${cidToString(value, { base: opts.cidBase })}${remainderPath ? '/' + remainderPath : ''}`
-  }
+    return `/ipfs/${cidToString(value, { base: opts.cidBase })}${
+      remainderPath ? "/" + remainderPath : ""
+    }`;
+  };
 
   return (name, opts, cb) => {
-    if (typeof opts === 'function') {
-      cb = opts
-      opts = {}
+    if (typeof opts === "function") {
+      cb = opts;
+      opts = {};
     }
-    opts = opts || {}
-    return nodeify(resolve(name, opts), cb)
-  }
-}
+    opts = opts || {};
+    return nodeify(resolve(name, opts), cb);
+  };
+};
