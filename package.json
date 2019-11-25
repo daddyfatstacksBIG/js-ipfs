@@ -7,7 +7,7 @@
   ],
   "homepage": "https://js.ipfs.io",
   "bugs": "https://github.com/ipfs/js-ipfs/issues",
-  "license": "MIT",
+  "license": "(Apache-2.0 OR MIT)",
   "leadMaintainer": "Alan Shaw <alan@tableflip.io>",
   "files": [
     "src",
@@ -191,7 +191,7 @@
     "update-notifier": "^3.0.1",
     "uri-to-multiaddr": "^3.0.1",
     "varint": "^5.0.0",
-    "yargs": "^14.0.0",
+    "yargs": "^15.0.1",
     "yargs-promise": "^1.1.0"
   },
   "devDependencies": {
