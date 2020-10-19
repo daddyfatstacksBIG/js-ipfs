@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "aegir": "^27.0.0",
-    "file-type": "^15.0.1",
+    "file-type": "^16.0.0",
     "sinon": "^9.0.3"
   }
 }
