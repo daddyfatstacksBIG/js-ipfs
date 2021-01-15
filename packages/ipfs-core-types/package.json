@@ -10,7 +10,6 @@
     "lint": "aegir lint",
     "test": "aegir ts -p check"
   },
-  "types": "src/index.ts",
   "files": [
     "src"
   ],
