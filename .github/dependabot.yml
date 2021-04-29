@@ -1,0 +1,57 @@
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: libp2p-record
+    versions:
+    - 0.10.0
+    - 0.10.1
+  - dependency-name: cbor
+    versions:
+    - 7.0.0
+    - 7.0.1
+    - 7.0.2
+    - 7.0.4
+  - dependency-name: is-ipfs
+    versions:
+    - 3.0.0
+  - dependency-name: err-code
+    versions:
+    - 3.0.0
+  - dependency-name: ipfs-interop
+    versions:
+    - 4.0.1
+    - 4.0.2
+  - dependency-name: libp2p
+    versions:
+    - 0.30.5
+    - 0.30.6
+    - 0.30.7
+  - dependency-name: libp2p-floodsub
+    versions:
+    - 0.24.1
+  - dependency-name: aegir
+    versions:
+    - 30.3.0
+  - dependency-name: libp2p-gossipsub
+    versions:
+    - 0.8.0
+  - dependency-name: uint8arrays
+    versions:
+    - 2.0.5
+  - dependency-name: typescript
+    versions:
+    - 4.1.3
+  - dependency-name: merge-options
+    versions:
+    - 3.0.4
+  - dependency-name: array-shuffle
+    versions:
+    - 2.0.0
+  - dependency-name: libp2p-websockets
+    versions:
+    - 0.15.0
