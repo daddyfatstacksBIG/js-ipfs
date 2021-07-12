@@ -47,7 +47,7 @@ describe('/ping', function () {
     expect(res).to.have.property('statusCode', 400)
   })
 
-  it('returns 500 for incorrect Peer Id', async () => {
+  it('returns error for incorrect Peer Id', async () => {
     ipfs.ping.withArgs(peerId).throws(new Error('derp'))
 
     const res = await http({

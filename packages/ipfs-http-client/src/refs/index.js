@@ -5,7 +5,15 @@ const toCamel = require('../lib/object-to-camel')
 const configure = require('../lib/configure')
 const toUrlSearchParams = require('../lib/to-url-search-params')
 
-module.exports = configure((api, options) => {
+/**
+ * @typedef {import('../types').HTTPClientExtraOptions} HTTPClientExtraOptions
+ * @typedef {import('ipfs-core-types/src/refs').API<HTTPClientExtraOptions>} RefsAPI
+ */
+
+module.exports = configure((api, opts) => {
+  /**
+   * @type {RefsAPI["refs"]}
+   */
   const refs = async function * (args, options = {}) {
     if (!Array.isArray(args)) {
       args = [args]
@@ -24,7 +32,8 @@ module.exports = configure((api, options) => {
 
     yield * res.ndjson()
   }
-  refs.local = require('./local')(options)
 
-  return refs
+  return Object.assign(refs, {
+    local: require('./local')(opts)
+  })
 })

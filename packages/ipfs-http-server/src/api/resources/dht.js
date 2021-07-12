@@ -3,15 +3,8 @@
 const Joi = require('../../utils/joi')
 const Boom = require('@hapi/boom')
 const { pipe } = require('it-pipe')
-const ndjson = require('iterable-ndjson')
-const toStream = require('it-to-stream')
-const { map } = require('streaming-iterables')
-const { PassThrough } = require('stream')
-const toIterable = require('stream-to-it')
-const debug = require('debug')
-const log = Object.assign(debug('ipfs:http-api:dht'), {
-  error: debug('ipfs:http-api:dht:error')
-})
+const map = require('it-map')
+const streamResponse = require('../../utils/stream-response')
 
 exports.findPeer = {
   options: {
@@ -21,7 +14,7 @@ exports.findPeer = {
         stripUnknown: true
       },
       query: Joi.object().keys({
-        peerId: Joi.peerId().required(),
+        peerId: Joi.cid().required(),
         timeout: Joi.timeout()
       })
         .rename('arg', 'peerId', {
@@ -30,6 +23,11 @@ exports.findPeer = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {
@@ -93,6 +91,11 @@ exports.findProvs = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler (request, h) {
     const {
       app: {
@@ -110,51 +113,26 @@ exports.findProvs = {
       }
     } = request
 
-    let providersFound = false
-    const output = new PassThrough()
-
-    pipe(
-      ipfs.dht.findProvs(cid, {
-        numProviders,
-        signal,
-        timeout
-      }),
-      map(({ id, addrs }) => {
-        providersFound = true
-
-        return {
-          Responses: [{
-            ID: id.toString(),
-            Addrs: (addrs || []).map(a => a.toString())
-          }],
-          Type: 4
-        }
-      }),
-      ndjson.stringify,
-      toIterable.sink(output)
-    )
-      .catch(err => {
-        log.error(err)
-
-        if (!providersFound && output.writable) {
-          output.write(' ')
-        }
-
-        request.raw.res.addTrailers({
-          'X-Stream-Error': JSON.stringify({
-            Message: err.message,
-            Code: 0
+    return streamResponse(request, h, () => {
+      return pipe(
+        ipfs.dht.findProvs(cid, {
+          numProviders,
+          signal,
+          timeout
+        }),
+        async function * (source) {
+          yield * map(source, ({ id, addrs }) => {
+            return {
+              Responses: [{
+                ID: id.toString(),
+                Addrs: (addrs || []).map(a => a.toString())
+              }],
+              Type: 4
+            }
           })
-        })
-      })
-      .finally(() => {
-        output.end()
-      })
-
-    return h.response(output)
-      .header('x-chunked-output', '1')
-      .header('content-type', 'application/json')
-      .header('Trailer', 'X-Stream-Error')
+        }
+      )
+    })
   }
 }
 
@@ -175,6 +153,11 @@ exports.get = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {
@@ -220,6 +203,11 @@ exports.provide = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {
@@ -258,6 +246,11 @@ exports.put = {
       })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {
@@ -294,7 +287,7 @@ exports.query = {
         stripUnknown: true
       },
       query: Joi.object().keys({
-        peerId: Joi.peerId().required(),
+        peerId: Joi.cid().required(),
         timeout: Joi.timeout()
       })
         .rename('arg', 'peerId', {
@@ -303,6 +296,11 @@ exports.query = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler (request, h) {
     const {
       app: {
@@ -319,17 +317,16 @@ exports.query = {
       }
     } = request
 
-    const response = toStream.readable(
-      pipe(
+    return streamResponse(request, h, () => {
+      return pipe(
         ipfs.dht.query(peerId, {
           signal,
           timeout
         }),
-        map(({ id }) => ({ ID: id.toString() })),
-        ndjson.stringify
+        async function * (source) {
+          yield * map(source, ({ id }) => ({ ID: id.toString() }))
+        }
       )
-    )
-
-    return h.response(response)
+    })
   }
 }

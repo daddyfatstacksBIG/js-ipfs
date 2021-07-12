@@ -2,8 +2,7 @@
 
 const Joi = require('../../utils/joi')
 const { pipe } = require('it-pipe')
-const { map } = require('streaming-iterables')
-const ndjson = require('iterable-ndjson')
+const map = require('it-map')
 const streamResponse = require('../../utils/stream-response')
 
 module.exports = {
@@ -15,7 +14,7 @@ module.exports = {
       },
       query: Joi.object().keys({
         count: Joi.number().integer().greater(0).default(10),
-        peerId: Joi.peerId().required(),
+        peerId: Joi.cid().required(),
         timeout: Joi.timeout()
       })
         .rename('arg', 'peerId', {
@@ -28,6 +27,10 @@ module.exports = {
         })
     }
   },
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler (request, h) {
     const {
       app: {
@@ -46,13 +49,14 @@ module.exports = {
     } = request
 
     return streamResponse(request, h, () => pipe(
-      ipfs.ping(peerId, {
+      ipfs.ping(peerId.toString(), {
         count,
         signal,
         timeout
       }),
-      map(pong => ({ Success: pong.success, Time: pong.time, Text: pong.text })),
-      ndjson.stringify
+      async function * (source) {
+        yield * map(source, pong => ({ Success: pong.success, Time: pong.time, Text: pong.text }))
+      }
     ))
   }
 }

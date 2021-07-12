@@ -1,9 +1,9 @@
 'use strict'
 
 const Joi = require('../../utils/joi')
-const { map, filter } = require('streaming-iterables')
+const map = require('it-map')
+const filter = require('it-filter')
 const { pipe } = require('it-pipe')
-const ndjson = require('iterable-ndjson')
 const streamResponse = require('../../utils/stream-response')
 
 exports.gc = {
@@ -23,6 +23,10 @@ exports.gc = {
         })
     }
   },
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler (request, h) {
     const {
       app: {
@@ -44,12 +48,15 @@ exports.gc = {
         signal,
         timeout
       }),
-      filter(r => !r.err || streamErrors),
-      map(r => ({
-        Error: (r.err && r.err.message) || undefined,
-        Key: (!r.err && { '/': r.cid.toString() }) || undefined
-      })),
-      ndjson.stringify
+      async function * filterErrors (source) {
+        yield * filter(source, r => !r.err || streamErrors)
+      },
+      async function * transformGcOutput (source) {
+        yield * map(source, r => ({
+          Error: (r.err && r.err.message) || undefined,
+          Key: (!r.err && { '/': r.cid.toString() }) || undefined
+        }))
+      }
     ))
   }
 }
@@ -66,6 +73,10 @@ exports.version = {
       })
     }
   },
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler: async (request, h) => {
     const {
       app: {
@@ -103,6 +114,10 @@ exports.stat = {
       })
     }
   },
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler: async (request, h) => {
     const {
       app: {
@@ -124,11 +139,11 @@ exports.stat = {
     })
 
     return h.response({
-      NumObjects: stat.numObjects,
-      RepoSize: stat.repoSize,
+      NumObjects: stat.numObjects.toString(),
+      RepoSize: stat.repoSize.toString(),
       RepoPath: stat.repoPath,
       Version: stat.version,
-      StorageMax: stat.storageMax
+      StorageMax: stat.storageMax.toString()
     })
   }
 

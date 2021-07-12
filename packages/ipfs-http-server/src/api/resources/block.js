@@ -1,15 +1,14 @@
 'use strict'
 
 const multihash = require('multihashing-async').multihash
-const { baseTable: codecs } = require('multicodec/src/base-table')
+const { nameToCode: codecs } = require('multicodec')
 const multipart = require('../../utils/multipart-request-parser')
 const Joi = require('../../utils/joi')
 const Boom = require('@hapi/boom')
 const { cidToString } = require('ipfs-core-utils/src/cid')
 const all = require('it-all')
 const { pipe } = require('it-pipe')
-const { map } = require('streaming-iterables')
-const ndjson = require('iterable-ndjson')
+const map = require('it-map')
 const streamResponse = require('../../utils/stream-response')
 
 exports.get = {
@@ -34,7 +33,10 @@ exports.get = {
     }
   },
 
-  // main route handler which is called after the above `parseArgs`, but only if the args were valid
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {
@@ -65,7 +67,7 @@ exports.get = {
       throw Boom.notFound('Block was unwanted before it could be remotely retrieved')
     }
 
-    return h.response(block.data).header('X-Stream-Output', '1')
+    return h.response(Buffer.from(block.data.buffer, block.data.byteOffset, block.data.byteLength)).header('X-Stream-Output', '1')
   }
 }
 exports.put = {
@@ -76,6 +78,10 @@ exports.put = {
     },
     pre: [{
       assign: 'args',
+      /**
+       * @param {import('../../types').Request} request
+       * @param {import('@hapi/hapi').ResponseToolkit} _h
+       */
       method: async (request, _h) => {
         if (!request.payload) {
           throw Boom.badRequest("File argument 'data' is required")
@@ -83,7 +89,7 @@ exports.put = {
 
         let data
 
-        for await (const part of multipart(request)) {
+        for await (const part of multipart(request.raw.req)) {
           if (part.type !== 'file') {
             continue
           }
@@ -118,6 +124,11 @@ exports.put = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {
@@ -190,6 +201,11 @@ exports.rm = {
         })
     }
   },
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   handler (request, h) {
     const {
       app: {
@@ -216,8 +232,9 @@ exports.rm = {
         timeout,
         signal
       }),
-      map(({ cid, error }) => ({ Hash: cidToString(cid, { base: cidBase }), Error: error ? error.message : undefined })),
-      ndjson.stringify
+      async function * (source) {
+        yield * map(source, ({ cid, error }) => ({ Hash: cidToString(cid, { base: cidBase }), Error: error ? error.message : undefined }))
+      }
     ))
   }
 }
@@ -244,7 +261,11 @@ exports.stat = {
         })
     }
   },
-  // main route handler which is called after the above `parseArgs`, but only if the args were valid
+
+  /**
+   * @param {import('../../types').Request} request
+   * @param {import('@hapi/hapi').ResponseToolkit} h
+   */
   async handler (request, h) {
     const {
       app: {

@@ -162,7 +162,7 @@ Run ipfs node offline. The node does not connect to the rest of the network but 
 Configure remote preload nodes. The remote will preload content added on this node, and also attempt to preload objects requested by this node.
 
 - `enabled` (boolean): Enable content preloading (Default: `true`)
-- `addresses` (array): Multiaddr API addresses of nodes that should preload content. **NOTE:** nodes specified here should also be added to your node's bootstrap address list at [`config.Boostrap`](#optionsconfig).
+- `addresses` (array): Multiaddr API addresses of nodes that should preload content. **NOTE:** nodes specified here should also be added to your node's bootstrap address list at [`config.Bootstrap`](#optionsconfig).
 
 ### `options.EXPERIMENTAL`
 
@@ -181,7 +181,7 @@ Enable and configure experimental features.
 |------|---------|
 | object |  [`config-nodejs.js`](https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-core/src/runtime/config-nodejs.js) in Node.js, [`config-browser.js`](https://github.com/ipfs/js-ipfs/blob/master/packages/ipfs-core/src/runtime/config-browser.js) in browsers |
 
-Modify the default IPFS node config. This object will be *merged* with the default config; it will not replace it. The default config is documented in [the js-ipfs config file docs](./docs/CONFIG.md).
+Modify the default IPFS node config. This object will be *merged* with the default config; it will not replace it. The default config is documented in [the js-ipfs config file docs](./CONFIG.md).
 
 ### `options.ipld`
 

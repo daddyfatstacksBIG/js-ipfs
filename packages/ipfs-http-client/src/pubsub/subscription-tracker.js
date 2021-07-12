@@ -1,18 +1,26 @@
 'use strict'
 
-const AbortController = require('native-abort-controller')
+const { AbortController } = require('native-abort-controller')
+
+/**
+ * @typedef {import('ipfs-core-types/src/pubsub').MessageHandlerFn} MessageHandlerFn
+ *
+ * @typedef {Object} Subscription
+ * @property {MessageHandlerFn} handler
+ * @property {AbortController} controller
+ */
 
 class SubscriptionTracker {
   constructor () {
+    /** @type {Map<string, Subscription[]>} */
     this._subs = new Map()
   }
 
-  static singleton () {
-    if (SubscriptionTracker.instance) return SubscriptionTracker.instance
-    SubscriptionTracker.instance = new SubscriptionTracker()
-    return SubscriptionTracker.instance
-  }
-
+  /**
+   * @param {string} topic
+   * @param {MessageHandlerFn} handler
+   * @param {AbortSignal} [signal]
+   */
   subscribe (topic, handler, signal) {
     const topicSubs = this._subs.get(topic) || []
 
@@ -33,6 +41,10 @@ class SubscriptionTracker {
     return controller.signal
   }
 
+  /**
+   * @param {string} topic
+   * @param {MessageHandlerFn} [handler]
+   */
   unsubscribe (topic, handler) {
     const subs = this._subs.get(topic) || []
     let unsubs
@@ -45,10 +57,12 @@ class SubscriptionTracker {
       unsubs = subs
     }
 
+    if (!(this._subs.get(topic) || []).length) {
+      this._subs.delete(topic)
+    }
+
     unsubs.forEach(s => s.controller.abort())
   }
 }
-
-SubscriptionTracker.instance = null
 
 module.exports = SubscriptionTracker
